@@ -4,5 +4,6 @@
 - https://github.com/dolthub/dolt
 - https://github.com/vitessio/vitess/tree/main/go/vt/sqlparser
 - https://github.com/pingcap/tidb/tree/master/parser
+- https://github.com/alecthomas/participle # a parser lib for go
 - https://github.com/itchyny/gojq
 - https://github.com/kubernetes/client-go/blob/master/util/jsonpath/jsonpath.go
