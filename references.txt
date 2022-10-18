@@ -2,6 +2,7 @@
 - https://github.com/jedib0t/go-pretty
 - https://github.com/mergestat/mergestat
 - https://github.com/dolthub/dolt
+- https://github.com/blastrain/vitess-sqlparser
 - https://github.com/vitessio/vitess/tree/main/go/vt/sqlparser
 - https://github.com/pingcap/tidb/tree/master/parser
 - https://github.com/alecthomas/participle # a parser lib for go
