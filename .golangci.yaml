@@ -1,0 +1,29 @@
+run:
+  deadline: 5m
+  skip-files:
+    - .*_generated\.?.*\.go$
+
+linters:
+  disable-all: true
+  enable:
+    - bodyclose
+    - unused
+    - dogsled
+    - gomodguard
+    - gocritic
+    - gofmt
+    - goimports
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - rowserrcheck
+    - staticcheck
+    - typecheck
+    - unconvert
+    - revive
+    - stylecheck
+    - exportloopref
+    - errchkjson
+    - errcheck

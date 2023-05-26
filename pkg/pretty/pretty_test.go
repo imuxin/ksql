@@ -8,7 +8,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
-func TestExample(tt *testing.T) {
+func TestExample(_ *testing.T) {
 	t := table.NewWriter()
 	// t.SetOutputMirror(os.Stdout) // If set, Render() will output to stdout
 	t.AppendHeader(table.Row{"#", "First Name", "Last Name", "Salary"})
@@ -26,7 +26,7 @@ func TestExample(tt *testing.T) {
 	}
 }
 
-func TestAutoMerge(tt *testing.T) {
+func TestAutoMerge(_ *testing.T) {
 	rowConfigAutoMerge := table.RowConfig{AutoMerge: true}
 
 	t := table.NewWriter()
