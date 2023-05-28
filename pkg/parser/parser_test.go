@@ -3,18 +3,19 @@ package parser
 import (
 	"testing"
 
+	"github.com/alecthomas/repr"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestParser(t *testing.T) {
 	const EBNF = `KSQL = UseStat* SelectStat* .
 UseStat = "USE" <ident> .
-SelectStat = "SELECT" SelectExpr "FROM" FromExpr ("WHERE" WhereExpr)? ("LABEL" LabelExpr)? .
+SelectStat = "SELECT" SelectExpr "FROM" FromExpr ("WHERE" WhereExpr)? ("LABEL" LabelExpr)? ("NAME" (<ident> | <string>) ("," (<ident> | <string>))*) (("NAMESPACE" <ident>) | <string>) .
 SelectExpr = "*" | (Column ("," Column)*) .
 Column = (<ident> | <string>) ("AS" <ident>)? .
 FromExpr = <ident> ("@" <ident>)? .
 WhereExpr = Compare Condition* .
-Compare = (<ident> | <string>) Operation .
+Compare = "NOT"? (<ident> | <string>) Operation .
 Operation = (("NOT"? "EXISTS") | (("<>" | "<=" | ">=" | "=" | "==" | "<" | ">" | "!=" | ("NOT"? "IN")) Value)) .
 Value = (<number> | <string> | ("TRUE" | "FALSE") | "NULL" | Array) .
 Array = "(" Value ("," Value)* ")" .
@@ -25,17 +26,21 @@ LabelExpr = Compare ("," Compare)* .`
 
 func TestParse(t *testing.T) {
 	const demoSQLStr = `
-	select a as aa, b, "spec.name"
-	    from te.st@cluster1
-		where x = 1.1
-		    and 'in' = 'abc'
-		    and 'in' == 'abc'
-			and xx = TRUE
-			or abc in (1,2,3)
-			or abc not in (1,2,3) # dfadf
-		label cluster exists , cluster not exists , k8s.io/proj = "sample"
+	SELECT a AS aa, b, "spec.name"
+	    FROM te.st@cluster1
+		WHERE NOT x = 1.1
+		    AND 'in' = 'abc'
+		    AND 'in' == 'abc'
+			AND xx = TRUE
+			OR abc IN (1,2,3)
+			OR abc NOT IN (1,2,3) # dfadf
+		LABEL cluster EXISTS , cluster NOT EXISTS , k8s.io/proj = "sample"
+		NAMESPACE istiosystem
+		NAME istiod-116, envoy
 	`
-	if _, err := Parse(demoSQLStr); err != nil {
+	if ksql, err := Parse(demoSQLStr); err != nil {
 		t.Error(err)
+	} else {
+		repr.Println(ksql)
 	}
 }

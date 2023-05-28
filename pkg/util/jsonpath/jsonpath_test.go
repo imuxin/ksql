@@ -1,24 +1,37 @@
 package jsonpath
 
 import (
-	"bytes"
 	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	utiljsonpath "k8s.io/client-go/util/jsonpath"
 )
 
 func TestJsonPath(t *testing.T) {
 	input := []byte(`{
-		"kind": "Pod"
+		"kind": "Pod",
+		"number": 1
 	}`)
 	var data interface{}
 	assert.NoError(t, json.Unmarshal(input, &data))
-	j := utiljsonpath.New("hello")
-	j.AllowMissingKeys(true)
-	assert.NoError(t, j.Parse("{.kind}"))
-	buf := new(bytes.Buffer)
-	assert.NoError(t, j.Execute(buf, data))
-	assert.Equal(t, "Pod", buf.String())
+	v, err := Find(data, "{.kind}")
+	assert.NoError(t, err)
+	assert.Equal(t, "Pod", v)
+
+	v, err = Find(data, "{.number}")
+	assert.NoError(t, err)
+	assert.Equal(t, "1", v)
+
+	data2 := struct {
+		Kind   string `json:"kind"`
+		Number int    `json:"number"`
+	}{
+		Kind:   "Pod",
+		Number: 1,
+	}
+
+	v, err = Find(data2, "{.number}")
+	assert.NoError(t, err)
+	assert.Equal(t, "1", v)
+
 }

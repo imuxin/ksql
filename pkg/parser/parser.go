@@ -16,6 +16,8 @@ const (
 		| FROM
 		| WHERE
 		| LABEL
+		| NAME
+		| NAMESPACE
 		| TRUE
 		| FALSE
 		| NULL
@@ -27,7 +29,7 @@ const (
 	)\b`
 	OPERATORS = `<> | != | <= | >= | == | @ | [-+*/%,.()=<>]`
 	SPACE     = `\s+`
-	IDENTITY  = `[a-zA-Z][a-zA-Z0-9_\.\/]*`
+	IDENTITY  = `[a-zA-Z][a-zA-Z0-9_\.\/\-]*`
 	NUMBER    = `[-+]?\d*\.?\d+([eE][-+]?\d+)?`
 	STRING    = `'[^']*' | "[^"]*"`
 	COMMENT   = `#[^\n]+`

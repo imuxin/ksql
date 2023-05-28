@@ -54,10 +54,12 @@ type UseStat struct {
 }
 
 type SelectStat struct {
-	Select SelectExpr `parser:" 'SELECT' @@ "`
-	From   FromExpr   `parser:" 'FROM' @@ "`
-	Where  *WhereExpr `parser:" ( 'WHERE' @@ )? "`
-	Label  *LabelExpr `parser:" ( 'LABEL' @@ )? "`
+	Select    SelectExpr `parser:" 'SELECT' @@ "`
+	From      FromExpr   `parser:" 'FROM' @@ "`
+	Where     *WhereExpr `parser:" ( 'WHERE' @@ )? "`
+	Label     *LabelExpr `parser:" ( 'LABEL' @@ )? "`
+	Name      []string   `parser:" ( 'NAME' (@Ident | @String) ( ',' (@Ident | @String) )* )? "`
+	Namespace string     `parser:" ( 'NAMESPACE' @Ident | @String )? "`
 }
 
 // type SelectStat struct{}
@@ -90,6 +92,7 @@ type Condition struct {
 }
 
 type Compare struct {
+	NOT       bool      `parser:" @'NOT'? "`
 	LHS       string    `parser:" ( @Ident | @String ) "`
 	Operation Operation `parser:" @@ "`
 }
