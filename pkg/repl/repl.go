@@ -38,7 +38,7 @@ func REPL() error {
 		}
 
 		if err := rl.Reindent(); err != nil {
-			// fmt.Fprintf(g.errWriter, "error: %s\n", err)
+			fmt.Printf("error: %s\n", err)
 			rl.Clear()
 			continue
 		}
@@ -47,6 +47,12 @@ func REPL() error {
 			result, err := executor.Execute[unstructured.Unstructured](in)
 			if err != nil {
 				fmt.Println(err)
+			}
+
+			if len(result) == 0 {
+				fmt.Println("No rows to display")
+				rl.Accepted()
+				continue
 			}
 
 			r2 := lop.Map(result, func(item unstructured.Unstructured, index int) interface{} {
@@ -65,25 +71,6 @@ func REPL() error {
 			})
 		}
 
-		// 	result, err := executor.Execute[appsv1.Deployment]("SELECT * FROM deploy NAMESPACE default")
-		// if err != nil {
-		// 	fmt.Println(err)
-		// }
-		// for _, item := range result {
-		// 	repr.Println(item.Namespace, "/", item.Name)
-		// }
-
-		// err = s.Eval(in)
-		// if err != nil {
-		// 	if err == ErrContinue {
-		// 		continue
-		// 	} else if err == ErrQuit {
-		// 		break
-		// 	} else if err != ErrCmdRun {
-		// 		rl.Clear()
-		// 		continue
-		// 	}
-		// }
 		rl.Accepted()
 	}
 	return nil

@@ -13,11 +13,22 @@ build:
 	$(GO) build -ldflags $(LDFLAGS)
 
 .PHONY: test
-test: lint gotestsum goverreport
+test: lint gotestsum goverreport prepare-envtest
 	@echo "running unit test..."
 	@mkdir -p output
+
 	$(GOTESTSUM) --format=pkgname --jsonfile=./output/out.json --packages=$(TEST_PACKAGE) -- -race -covermode=atomic -coverprofile=output/coverage.out -coverpkg $(TEST_PACKAGE)
 	$(GOVERREPORT) -coverprofile=./output/coverage.out
+
+.PHONY: prepare-envtest
+prepare-envtest: setup-envtest
+	@# Prepare a k8s testenv
+	@mkdir -p testbin
+	@$(SETUP_ENVTEST) use --bin-dir "$(PWD)/testbin" 1.27.1 -v debug -p env > $(PWD)/testbin/envtest.env
+
+SETUP_ENVTEST = $(shell pwd)/bin/setup-envtest
+setup-envtest:
+	$(call go_get,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,latest)
 
 GOLANGCI_LINT_FLAGS=
 ifneq ($(GOMAXPROCS),)

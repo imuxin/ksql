@@ -30,6 +30,10 @@ type APIServerDownloader struct {
 	Selector  labels.Selector
 }
 
+func (d APIServerDownloader) AllNamespace() bool {
+	return d.Namespace == ""
+}
+
 func (d APIServerDownloader) ResourceTypeOrNameArgs() []string {
 	return append([]string{d.Table}, d.Names...)
 }
@@ -37,8 +41,8 @@ func (d APIServerDownloader) ResourceTypeOrNameArgs() []string {
 func (d APIServerDownloader) Download() (*unstructured.UnstructuredList, error) {
 	r := resource.NewBuilder(defaultConfigFlags).
 		Unstructured().
-		NamespaceParam(d.Namespace).DefaultNamespace().AllNamespaces(d.Namespace == "").
-		LabelSelectorParam("").
+		NamespaceParam(d.Namespace).DefaultNamespace().AllNamespaces(d.AllNamespace()).
+		LabelSelectorParam(d.Selector.String()).
 		// FieldSelectorParam(o.FieldSelector).
 		// Subresource(o.Subresource).
 		RequestChunksOf(0).

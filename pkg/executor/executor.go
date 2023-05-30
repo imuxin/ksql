@@ -13,5 +13,9 @@ func Execute[T any](sql string) ([]T, error) {
 	if ksql == nil {
 		return nil, nil
 	}
-	return compiler.Compile[T](ksql).Run()
+	runable, err := compiler.Compile[T](ksql)
+	if err != nil {
+		return nil, err
+	}
+	return runable.Run()
 }

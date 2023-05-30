@@ -34,9 +34,12 @@ func TestParse(t *testing.T) {
 			AND xx = TRUE
 			OR abc IN (1,2,3)
 			OR abc NOT IN (1,2,3) # dfadf
-		LABEL cluster EXISTS , cluster NOT EXISTS , k8s.io/proj = "sample"
-		NAME istiod-116, envoy
 		NAMESPACE istiosystem
+		LABEL cluster EXISTS
+		LABEL cluster NOT EXISTS
+		LABEL k8s.io/proj = "sample"
+		NAME istiod-116
+		NAME envoy
 	`
 	if ksql, err := Parse(demoSQLStr); err != nil {
 		t.Error(err)

@@ -44,8 +44,8 @@ type KSQL struct {
 	Select SelectStat `parser:" @@* "`
 
 	// TODO
-	// Delete DeleteStat
-	// Update UpdateStat
+	// Delete DeleteStat `parser:" @@* "`
+	// Update UpdateStat `parser:" @@* "`
 }
 
 type UseStat struct {
@@ -54,15 +54,14 @@ type UseStat struct {
 }
 
 type SelectStat struct {
-	Select    SelectExpr `parser:" 'SELECT' @@ "`
-	From      FromExpr   `parser:" 'FROM' @@ "`
-	Where     *WhereExpr `parser:" ( 'WHERE' @@ )? "`
-	Label     *LabelExpr `parser:" ( 'LABEL' @@ )? "`
-	Name      []string   `parser:" ( 'NAME' (@Ident | @String) ( ',' (@Ident | @String) )* )? "`
-	Namespace string     `parser:" ( 'NAMESPACE' @Ident | @String )? "`
+	Select            SelectExpr          `parser:" 'SELECT' @@ "`
+	From              FromExpr            `parser:" 'FROM' @@ "`
+	Where             *WhereExpr          `parser:" ( 'WHERE' @@ )? "`
+	Namespace         string              `parser:" ( 'NAMESPACE' ( @Ident | @String ) )? "`
+	KubernetesFilters []*KubernetesFilter `parser:" @@* "`
 }
 
-// type SelectStat struct{}
+// TODO
 type DeleteStat struct{}
 type UpdateStat struct{}
 
@@ -79,6 +78,11 @@ type Column struct {
 type FromExpr struct {
 	Table string `parser:" @Ident "`
 	DB    string `parser:" ( '@' @Ident )? "`
+}
+
+type KubernetesFilter struct {
+	Label *Compare `parser:"   'LABEL' @@ "`
+	Name  *string  `parser:" | 'NAME' (@Ident | @String) "`
 }
 
 type WhereExpr struct {
@@ -103,10 +107,6 @@ type Operation struct {
 	RHS    Value  `parser:" @@ ) "`
 }
 
-type LabelExpr struct {
-	Compare []*Compare `parser:" @@ ( ',' @@ )* "`
-}
-
 type Boolean bool
 
 func (b *Boolean) Capture(values []string) error {
@@ -116,7 +116,7 @@ func (b *Boolean) Capture(values []string) error {
 
 type Value struct {
 	Number  *float64 ` parser:" ( @Number "`
-	String  *string  ` parser:" | @String "`
+	String  *string  ` parser:" | @String | @Ident "`
 	Boolean *Boolean ` parser:" | @('TRUE' | 'FALSE') "`
 	Null    bool     ` parser:" | @'NULL' "`
 	Array   *Array   ` parser:" | @@ )"`
