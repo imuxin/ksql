@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestJsonPath(t *testing.T) {
+func TestJSONPath(t *testing.T) {
 	input := []byte(`{
 		"kind": "Pod",
 		"number": 1

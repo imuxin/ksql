@@ -4,10 +4,10 @@ type Filter interface {
 	Filter(i any) bool
 }
 
-var _ Filter = &JsonPathFilter{}
+var _ Filter = &JSONPathFilter{}
 
-type JsonPathFilter struct{}
+type JSONPathFilter struct{}
 
-func (f JsonPathFilter) Filter(i any) bool {
+func (f JSONPathFilter) Filter(_ any) bool {
 	return true
 }

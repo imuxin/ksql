@@ -1,6 +1,18 @@
 GO ?= go
 TEST_PACKAGE = "./..."
 
+# WHY using this ldflags, related links:
+#   https://github.com/alecthomas/participle/issues/251
+#   https://github.com/golang/go/issues/19529
+#   https://github.com/golang/go/issues/9510
+#   https://go-review.googlesource.com/c/go/+/16741
+LDFLAGS ?= "-extldflags=-Wl,--allow-multiple-definition"
+
+.PHONY: build
+build:
+	$(GO) build -ldflags $(LDFLAGS)
+
+.PHONY: test
 test: lint gotestsum goverreport
 	@echo "running unit test..."
 	@mkdir -p output

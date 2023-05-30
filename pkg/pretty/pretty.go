@@ -11,7 +11,7 @@ import (
 
 type PrintColumn struct {
 	Name     string
-	JsonPath string
+	JSONPath string
 }
 
 func ToGenericArray(arr ...interface{}) []interface{} {
@@ -27,7 +27,7 @@ func Print[T any](list []T, columns []PrintColumn) {
 
 	for _, item := range list {
 		raw := lop.Map(columns, func(_item PrintColumn, index int) interface{} {
-			v, _ := jsonpath.Find(item, _item.JsonPath)
+			v, _ := jsonpath.Find(item, _item.JSONPath)
 			return v
 		})
 		t.AppendRow(raw)

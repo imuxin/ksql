@@ -38,21 +38,22 @@ func (cl *contLiner) promptString() string {
 
 func (cl *contLiner) Prompt() (string, error) {
 	line, err := cl.State.Prompt(cl.promptString())
-	if err == io.EOF {
+	switch err {
+	case io.EOF:
 		if cl.buffer != "" {
 			// cancel line continuation
 			cl.Accepted()
 			fmt.Println()
 			err = nil
 		}
-	} else if err == liner.ErrPromptAborted {
+	case liner.ErrPromptAborted:
 		err = nil
 		if cl.buffer != "" {
 			cl.Accepted()
 		} else {
 			fmt.Println("(^D to quit)")
 		}
-	} else if err == nil {
+	case nil:
 		if cl.buffer != "" {
 			cl.buffer = cl.buffer + "\n" + line
 		} else {

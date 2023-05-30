@@ -56,11 +56,11 @@ func REPL() error {
 			pretty.Print(r2, []pretty.PrintColumn{
 				{
 					Name:     "NAME",
-					JsonPath: "{ .metadata.name }",
+					JSONPath: "{ .metadata.name }",
 				},
 				{
 					Name:     "NAMESPACE",
-					JsonPath: "{ .metadata.namespace }",
+					JSONPath: "{ .metadata.namespace }",
 				},
 			})
 		}

@@ -10,7 +10,7 @@ import (
 func TestParser(t *testing.T) {
 	const EBNF = `KSQL = UseStat* SelectStat* .
 UseStat = "USE" <ident> .
-SelectStat = "SELECT" SelectExpr "FROM" FromExpr ("WHERE" WhereExpr)? ("LABEL" LabelExpr)? ("NAME" (<ident> | <string>) ("," (<ident> | <string>))*) (("NAMESPACE" <ident>) | <string>) .
+SelectStat = "SELECT" SelectExpr "FROM" FromExpr ("WHERE" WhereExpr)? ("LABEL" LabelExpr)? ("NAME" (<ident> | <string>) ("," (<ident> | <string>))*)? (("NAMESPACE" <ident>) | <string>)? .
 SelectExpr = "*" | (Column ("," Column)*) .
 Column = (<ident> | <string>) ("AS" <ident>)? .
 FromExpr = <ident> ("@" <ident>)? .
@@ -35,8 +35,8 @@ func TestParse(t *testing.T) {
 			OR abc IN (1,2,3)
 			OR abc NOT IN (1,2,3) # dfadf
 		LABEL cluster EXISTS , cluster NOT EXISTS , k8s.io/proj = "sample"
-		NAMESPACE istiosystem
 		NAME istiod-116, envoy
+		NAMESPACE istiosystem
 	`
 	if ksql, err := Parse(demoSQLStr); err != nil {
 		t.Error(err)

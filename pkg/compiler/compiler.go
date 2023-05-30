@@ -13,6 +13,6 @@ func Compile[T any](ksql *parser.KSQL) runtime.Runnable[T] {
 	}
 	return runtime.KubernetesRunnable[T]{
 		Downloader: d,
-		Filter:     runtime.JsonPathFilter{},
+		Filter:     runtime.JSONPathFilter{},
 	}
 }
