@@ -16,6 +16,10 @@ import (
 	"github.com/imuxin/ksql/pkg/repl"
 )
 
+func PrepareDatabase(_ *rest.Config) {
+
+}
+
 func TestExecuteAndFormat(t *testing.T) {
 	env := &envtest.Environment{}
 	restConfig, err := env.Start()
