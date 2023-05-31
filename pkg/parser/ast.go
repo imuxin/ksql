@@ -57,7 +57,7 @@ type SelectStat struct {
 	Select            SelectExpr          `parser:" 'SELECT' @@ "`
 	From              FromExpr            `parser:" 'FROM' @@ "`
 	Where             *WhereExpr          `parser:" ( 'WHERE' @@ )? "`
-	Namespace         string              `parser:" ( 'NAMESPACE' ( @Ident | @String ) )? "`
+	Namespace         string              `parser:" ( 'NAMESPACE' | 'NS' ( @Ident | @String ) )? "`
 	KubernetesFilters []*KubernetesFilter `parser:" @@* "`
 }
 

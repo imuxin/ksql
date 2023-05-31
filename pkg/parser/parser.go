@@ -18,6 +18,7 @@ const (
 		| LABEL
 		| NAME
 		| NAMESPACE
+		| NS
 		| TRUE
 		| FALSE
 		| NULL

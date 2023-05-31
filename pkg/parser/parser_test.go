@@ -34,7 +34,8 @@ func TestParse(t *testing.T) {
 			AND xx = TRUE
 			OR abc IN (1,2,3)
 			OR abc NOT IN (1,2,3) # dfadf
-		NAMESPACE istiosystem
+		# NAMESPACE istiosystem
+		NS istiosystem
 		LABEL cluster EXISTS
 		LABEL cluster NOT EXISTS
 		LABEL k8s.io/proj = "sample"
