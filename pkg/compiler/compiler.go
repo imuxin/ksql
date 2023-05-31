@@ -2,12 +2,13 @@ package compiler
 
 import (
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/rest"
 
 	"github.com/imuxin/ksql/pkg/parser"
 	"github.com/imuxin/ksql/pkg/runtime"
 )
 
-func Compile[T any](ksql *parser.KSQL) (runtime.Runnable[T], error) {
+func Compile[T any](ksql *parser.KSQL, restConfig *rest.Config) (runtime.Runnable[T], error) {
 	names := make([]string, 0)
 	selector := labels.NewSelector()
 	for _, item := range ksql.Select.KubernetesFilters {
@@ -24,10 +25,11 @@ func Compile[T any](ksql *parser.KSQL) (runtime.Runnable[T], error) {
 	}
 
 	d := runtime.APIServerDownloader{
-		Table:     ksql.Select.From.Table,
-		Namespace: ksql.Select.Namespace,
-		Names:     names,
-		Selector:  selector,
+		RestConfig: restConfig,
+		Table:      ksql.Select.From.Table,
+		Namespace:  ksql.Select.Namespace,
+		Names:      names,
+		Selector:   selector,
 	}
 	return runtime.KubernetesRunnable[T]{
 		Downloader: d,

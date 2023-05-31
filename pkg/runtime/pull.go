@@ -11,9 +11,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/client-go/rest"
 )
-
-var defaultConfigFlags = genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag().WithDiscoveryBurst(300).WithDiscoveryQPS(50.0)
 
 type Downloader interface {
 	Download() (*unstructured.UnstructuredList, error)
@@ -23,11 +22,12 @@ type Downloader interface {
 var _ Downloader = &APIServerDownloader{}
 
 type APIServerDownloader struct {
-	Database  string
-	Table     string
-	Namespace string
-	Names     []string
-	Selector  labels.Selector
+	RestConfig *rest.Config
+	Database   string
+	Table      string
+	Namespace  string
+	Names      []string
+	Selector   labels.Selector
 }
 
 func (d APIServerDownloader) AllNamespace() bool {
@@ -38,8 +38,23 @@ func (d APIServerDownloader) ResourceTypeOrNameArgs() []string {
 	return append([]string{d.Table}, d.Names...)
 }
 
+func (d APIServerDownloader) restClientGetter() resource.RESTClientGetter {
+	var wrapper = func(c *rest.Config) *rest.Config {
+		if d.RestConfig != nil {
+			return d.RestConfig
+		}
+		return c
+	}
+
+	return genericclioptions.NewConfigFlags(true).
+		WithDeprecatedPasswordFlag().
+		WithDiscoveryBurst(300).
+		WithDiscoveryQPS(50.0).
+		WithWrapConfigFn(wrapper)
+}
+
 func (d APIServerDownloader) Download() (*unstructured.UnstructuredList, error) {
-	r := resource.NewBuilder(defaultConfigFlags).
+	r := resource.NewBuilder(d.restClientGetter()).
 		Unstructured().
 		NamespaceParam(d.Namespace).DefaultNamespace().AllNamespaces(d.AllNamespace()).
 		LabelSelectorParam(d.Selector.String()).

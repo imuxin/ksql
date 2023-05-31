@@ -1,8 +1,6 @@
 package pretty
 
 import (
-	"fmt"
-
 	"github.com/jedib0t/go-pretty/v6/table"
 	lop "github.com/samber/lo/parallel"
 
@@ -18,7 +16,7 @@ func ToGenericArray(arr ...interface{}) []interface{} {
 	return arr
 }
 
-func Print[T any](list []T, columns []PrintColumn) {
+func Format[T any](list []T, columns []PrintColumn) string {
 	t := table.NewWriter()
 	headers := lop.Map(columns, func(item PrintColumn, index int) interface{} {
 		return item.Name
@@ -34,5 +32,5 @@ func Print[T any](list []T, columns []PrintColumn) {
 	}
 	t.SetStyle(table.StyleLight)
 	t.Style().Options.SeparateRows = true
-	fmt.Println(t.Render())
+	return t.Render()
 }

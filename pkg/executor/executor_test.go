@@ -8,5 +8,5 @@ import (
 
 func TestXxx(_ *testing.T) {
 	sql := `select * from deploy namespace default label app = "zookeeper" label a in ("1", "2")`
-	_, _ = Execute[unstructured.Unstructured](sql)
+	_, _ = Execute[unstructured.Unstructured](sql, nil)
 }

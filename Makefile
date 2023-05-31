@@ -16,7 +16,6 @@ build:
 test: lint gotestsum goverreport prepare-envtest
 	@echo "running unit test..."
 	@mkdir -p output
-
 	$(GOTESTSUM) --format=pkgname --jsonfile=./output/out.json --packages=$(TEST_PACKAGE) -- -race -covermode=atomic -coverprofile=output/coverage.out -coverpkg $(TEST_PACKAGE)
 	$(GOVERREPORT) -coverprofile=./output/coverage.out
 

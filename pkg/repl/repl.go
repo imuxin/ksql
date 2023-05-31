@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"io"
 
-	lop "github.com/samber/lo/parallel"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/imuxin/ksql/pkg/executor"
-	"github.com/imuxin/ksql/pkg/pretty"
 )
 
 // Error ...
@@ -44,31 +42,11 @@ func REPL() error {
 		}
 
 		{
-			result, err := executor.Execute[unstructured.Unstructured](in)
+			result, err := executor.Execute[unstructured.Unstructured](in, nil)
 			if err != nil {
 				fmt.Println(err)
 			}
-
-			if len(result) == 0 {
-				fmt.Println("No rows to display")
-				rl.Accepted()
-				continue
-			}
-
-			r2 := lop.Map(result, func(item unstructured.Unstructured, index int) interface{} {
-				return item.Object
-			})
-
-			pretty.Print(r2, []pretty.PrintColumn{
-				{
-					Name:     "NAME",
-					JSONPath: "{ .metadata.name }",
-				},
-				{
-					Name:     "NAMESPACE",
-					JSONPath: "{ .metadata.namespace }",
-				},
-			})
+			fmt.Println(Output(result))
 		}
 
 		rl.Accepted()
