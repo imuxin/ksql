@@ -9,6 +9,10 @@ import (
 )
 
 func Compile[T any](ksql *parser.KSQL, restConfig *rest.Config) (runtime.Runnable[T], error) {
+	if ksql.Select.From.Table == "" {
+		return nil, nil
+	}
+
 	names := make([]string, 0)
 	selector := labels.NewSelector()
 	for _, item := range ksql.Select.KubernetesFilters {

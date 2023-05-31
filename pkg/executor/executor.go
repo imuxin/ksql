@@ -16,6 +16,9 @@ func Execute[T any](sql string, restConfig *rest.Config) ([]T, error) {
 		return nil, nil
 	}
 	runable, err := compiler.Compile[T](ksql, restConfig)
+	if runable == nil {
+		return []T{}, nil
+	}
 	if err != nil {
 		return nil, err
 	}

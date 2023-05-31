@@ -32,7 +32,7 @@ const (
 	IDENTITY  = `[a-zA-Z][a-zA-Z0-9_\.\/\-]*`
 	NUMBER    = `[-+]?\d*\.?\d+([eE][-+]?\d+)?`
 	STRING    = `'[^']*' | "[^"]*"`
-	COMMENT   = `#[^\n]+`
+	COMMENT   = `#[^\n]*`
 )
 
 var (
