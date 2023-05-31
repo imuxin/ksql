@@ -1,22 +1,21 @@
-GO ?= go
-TEST_PACKAGE = "./..."
+include $(PWD)/.env
 
-# WHY using this ldflags, related links:
-#   https://github.com/alecthomas/participle/issues/251
-#   https://github.com/golang/go/issues/19529
-#   https://github.com/golang/go/issues/9510
-#   https://go-review.googlesource.com/c/go/+/16741
-LDFLAGS ?= "-extldflags=-Wl,--allow-multiple-definition"
+haha:
+	@echo ${OSFLAG}
 
 .PHONY: build
 build:
-	$(GO) build -ldflags $(LDFLAGS)
+	$(GO) build $(LDFLAGS)
+
+.PHONY: release
+release: export BUILD = release
+release: build
 
 .PHONY: test
 test: lint gotestsum goverreport prepare-envtest
 	@echo "running unit test..."
 	@mkdir -p output
-	$(GOTESTSUM) --format=pkgname --jsonfile=./output/out.json --packages=$(TEST_PACKAGE) -- -race -covermode=atomic -coverprofile=output/coverage.out -coverpkg $(TEST_PACKAGE)
+	$(GOTESTSUM) --format=pkgname --jsonfile=./output/out.json --packages=$(TEST_PACKAGE) -- -race -covermode=atomic -coverprofile=output/coverage.out -coverpkg $(TEST_PACKAGE) $(LDFLAGS)
 	$(GOVERREPORT) -coverprofile=./output/coverage.out
 
 .PHONY: prepare-envtest
