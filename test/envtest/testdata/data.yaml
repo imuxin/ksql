@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    ksql.io/display: "ksql for test"
+  labels:
+    kubernetes.io/metadata.name: ksql
+  name: ksql
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    ksql.io/display: "ksql-system for test"
+  labels:
+    kubernetes.io/metadata.name: ksql-system
+  name: ksql-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cpaas.io/creator: admin
+  labels:
+    app: nginx
+  name: nginx
+  namespace: ksql
+spec:
+  clusterIP: 10.0.0.136
+  clusterIPs:
+  - 10.0.0.136
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: tcp-80
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cpaas.io/creator: admin
+  labels:
+    app: nginx
+  name: nginx
+  namespace: ksql-system
+spec:
+  clusterIP: 10.0.0.137
+  clusterIPs:
+  - 10.0.0.137
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: tcp-80
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+  sessionAffinity: None
+  type: ClusterIP
