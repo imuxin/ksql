@@ -34,7 +34,7 @@ func TestExecuteAndFormat(t *testing.T) {
 	err = restCli.Post().Resource("namespaces").Body(n).Do(context.TODO()).Error()
 	assert.NoError(t, err)
 
-	result, err := executor.Execute[unstructured.Unstructured]("select * from 'namespace'", restConfig)
+	result, err := executor.Execute[unstructured.Unstructured]("select * from namespace", restConfig)
 	assert.NoError(t, err)
 	fmt.Println(repl.Output(result))
 

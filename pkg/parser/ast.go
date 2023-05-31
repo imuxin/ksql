@@ -76,7 +76,7 @@ type Column struct {
 }
 
 type FromExpr struct {
-	Table string `parser:" @Ident "`
+	Table string `parser:" ( @Ident | @'NAMESPACE' | @'NS' | @'NAME' | @'SELECT' | @'LABEL' ) "`
 	DB    string `parser:" ( '@' @Ident )? "`
 }
 
