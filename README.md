@@ -36,42 +36,48 @@ ksql> SELECT "{ .metadata.name }" AS NAME, "{ .spec.clusterIP }" AS "CLUSTER-IP"
 
 ```go
 func list() ([]T, error) {
-   kubeConfig := getKubeConfig()
+    kubeConfig := getKubeConfig()
 
-	client, err := dynamic.NewForConfig(kubeConfig)
-	if err != nil {
-		return nil, err
-	}
+    client, err := dynamic.
+        NewForConfig(kubeConfig)
+    if err != nil {
+        return nil, err
+    }
 
-	gvr := schema.GroupVersionResource{
-		Group:    "k8s.io",
-		Version:  "v1alpha1",
-		Resource: "tttt",
-	}
+    gvr :=
+        schema.GroupVersionResource{
+            Group:    "k8s.io",
+            Version:  "v1alpha1",
+            Resource: "tttt",
+        }
 
-	s := labels.NewSelector()
-	req, err := labels.NewRequirement("key", selection.Equals, []string{"val"})
-	if err != nil {
-		return nil, err
-	}
-	s = s.Add(*req)
+    s := labels.NewSelector()
+    req, err := labels.NewRequirement(
+        "key", selection.Equals, []string{"val"})
+    if err != nil {
+        return nil, err
+    }
+    s = s.Add(*req)
 
-	us, err := client.Resource(gvr).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: s.String(),
-	})
-	if err != nil {
-		return nil, err
-	}
+    us, err := client.
+        Resource(gvr).
+        List(context.TODO(), metav1.ListOptions{
+            LabelSelector: s.String(),
+        })
+    if err != nil {
+        return nil, err
+    }
 
-	var results []T
-	for _, item := range us.Items {
-		obj := &T{}
-		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(item.Object, obj); err != nil {
-			return nil, err
-		}
-		results = append(results, *obj)
-	}
-	return results, nil
+    var results []T
+    for _, item := range us.Items {
+        obj := &T{}
+        if err := runtime.DefaultUnstructuredConverter.
+            FromUnstructured(item.Object, obj); err != nil {
+            return nil, err
+        }
+        results = append(results, *obj)
+    }
+    return results, nil
 }
 ```
 </td>
@@ -81,9 +87,9 @@ func list() ([]T, error) {
 import "github.com/imuxin/ksql/pkg/executor"
 
 func list() ([]T, error) {
-	kubeConfig := getKubeConfig()
-	sql := `SELECT * FROM tttt.v1alpha1.k8s.io LABEL key = val`
-	return executor.Execute[T](sql, kubeConfig)
+    kubeConfig := getKubeConfig()
+    sql := `SELECT * FROM tttt.v1alpha1.k8s.io LABEL key = val`
+    return executor.Execute[T](sql, kubeConfig)
 }
 ```
 </td>
