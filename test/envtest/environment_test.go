@@ -74,6 +74,8 @@ func prepareDatabase(t *testing.T, restConfig *rest.Config) {
 
 func TestExecuteAndFormat(t *testing.T) {
 	env := &envtest.Environment{}
+	defer assert.NoError(t, env.Stop())
+
 	restConfig, err := env.Start()
 	assert.NoError(t, err)
 
@@ -95,6 +97,4 @@ func TestExecuteAndFormat(t *testing.T) {
 		// fmt.Println(repl.Output(result))
 		assert.Equal(t, string(expect), repl.Output(result))
 	})
-
-	assert.NoError(t, env.Stop())
 }

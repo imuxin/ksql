@@ -5,41 +5,42 @@ import (
 	"reflect"
 
 	"github.com/reactivex/rxgo/v2"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	"github.com/imuxin/ksql/pkg/ext"
 )
 
 var (
 	DefaultDatabase = ""
 )
 
-var _ Runnable[any] = &KubernetesRunnable[any]{}
+var _ Runnable[any] = &RunnableImpl[any]{}
 
 type Runnable[T any] interface {
 	Run() ([]T, error)
 }
 
-type KubernetesRunnable[T any] struct {
-	Downloader Downloader
+type RunnableImpl[T any] struct {
+	Downloader ext.Downloader
 	Filter     Filter
 }
 
-func (r KubernetesRunnable[T]) Run() ([]T, error) {
+func (r RunnableImpl[T]) Run() ([]T, error) {
 	list, err := r.Downloader.Download()
 	if err != nil {
 		return nil, err
 	}
-	_r, err := rxgo.Just(list.Items)().
+	_r, err := rxgo.Just(list)().
 		Filter(func(i interface{}) bool {
 			return r.Filter.Filter(i)
 		}).
 		Map(func(_ context.Context, i interface{}) (interface{}, error) {
 			var t T
 			o := reflect.New(reflect.TypeOf(t)).Interface() // o's type is *T
-			err := runtime.DefaultUnstructuredConverter.FromUnstructured(i.(unstructured.Unstructured).Object, o)
+			err := runtime.DefaultUnstructuredConverter.FromUnstructured(i.(ext.Object), o)
 			return o, err
 		}).
-		ToSlice(len(list.Items))
+		ToSlice(len(list))
 	if err != nil {
 		return nil, err
 	}

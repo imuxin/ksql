@@ -50,7 +50,7 @@ func TestAutoMerge(_ *testing.T) {
 		{Number: 6, Align: text.AlignCenter, AlignFooter: text.AlignCenter, AlignHeader: text.AlignCenter},
 	})
 	// t.SetOutputMirror(os.Stdout)
-	t.SetStyle(table.StyleLight)
+	// t.SetStyle(table.StyleLight)
 	t.Style().Options.SeparateRows = true
 	fmt.Println(t.Render())
 }

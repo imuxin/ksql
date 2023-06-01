@@ -12,11 +12,26 @@ type PrintColumn struct {
 	JSONPath string
 }
 
-func ToGenericArray(arr ...interface{}) []interface{} {
-	return arr
+var defaultPrintColumns = []PrintColumn{
+	{
+		Name:     "NAME",
+		JSONPath: "{ .metadata.name }",
+	},
+	{
+		Name:     "NAMESPACE",
+		JSONPath: "{ .metadata.namespace }",
+	},
 }
 
+// func ToGenericArray(arr ...interface{}) []interface{} {
+// 	return arr
+// }
+
 func Format[T any](list []T, columns []PrintColumn) string {
+	if len(columns) == 0 {
+		columns = defaultPrintColumns
+	}
+
 	t := table.NewWriter()
 	headers := lop.Map(columns, func(item PrintColumn, index int) interface{} {
 		return item.Name
@@ -30,7 +45,7 @@ func Format[T any](list []T, columns []PrintColumn) string {
 		})
 		t.AppendRow(raw)
 	}
-	t.SetStyle(table.StyleLight)
+	// t.SetStyle(table.StyleLight)
 	t.Style().Options.SeparateRows = true
 	return t.Render()
 }

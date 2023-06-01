@@ -16,14 +16,5 @@ func Output(result []unstructured.Unstructured) string {
 		return item.Object
 	})
 
-	return pretty.Format(r2, []pretty.PrintColumn{
-		{
-			Name:     "NAME",
-			JSONPath: "{ .metadata.name }",
-		},
-		{
-			Name:     "NAMESPACE",
-			JSONPath: "{ .metadata.namespace }",
-		},
-	})
+	return pretty.Format(r2, nil)
 }

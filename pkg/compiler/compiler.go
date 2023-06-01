@@ -4,6 +4,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/rest"
 
+	extkube "github.com/imuxin/ksql/pkg/ext/kube"
 	"github.com/imuxin/ksql/pkg/parser"
 	"github.com/imuxin/ksql/pkg/runtime"
 )
@@ -28,14 +29,14 @@ func Compile[T any](ksql *parser.KSQL, restConfig *rest.Config) (runtime.Runnabl
 		}
 	}
 
-	d := runtime.APIServerDownloader{
+	d := extkube.APIServerDownloader{
 		RestConfig: restConfig,
 		Table:      ksql.Select.From.Table,
 		Namespace:  ksql.Select.Namespace,
 		Names:      names,
 		Selector:   selector,
 	}
-	return runtime.KubernetesRunnable[T]{
+	return runtime.RunnableImpl[T]{
 		Downloader: d,
 		Filter:     runtime.JSONPathFilter{}, // TODO
 	}, nil
