@@ -7,7 +7,7 @@ import (
 )
 
 func Find(data interface{}, pattern string) (string, error) {
-	j := utiljsonpath.New("hello")
+	j := utiljsonpath.New("ksql-jsonpath")
 	_ = j.AllowMissingKeys(true)
 	if err := j.Parse(pattern); err != nil {
 		return "", err

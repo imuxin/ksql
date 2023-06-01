@@ -24,7 +24,7 @@ type Runnable[T any] interface {
 
 type RunnableImpl[T any] struct {
 	Downloader   ext.Downloader
-	Filter       Filter
+	WhereFilter  Filter
 	PrintColumns []pretty.PrintColumn
 }
 
@@ -35,7 +35,7 @@ func (r RunnableImpl[T]) Run() ([]T, error) {
 	}
 	_r, err := rxgo.Just(list)().
 		Filter(func(i interface{}) bool {
-			return r.Filter.Filter(i)
+			return r.WhereFilter.Filter(i)
 		}).
 		Map(func(_ context.Context, i interface{}) (interface{}, error) {
 			var t T

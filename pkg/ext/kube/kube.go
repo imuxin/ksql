@@ -1,6 +1,8 @@
 package kube
 
 import (
+	"errors"
+
 	lop "github.com/samber/lo/parallel"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
@@ -47,6 +49,9 @@ func (d APIServerDownloader) restClientGetter() resource.RESTClientGetter {
 }
 
 func (d APIServerDownloader) Download() ([]ext.Object, error) {
+	if d.AllNamespace() && len(d.Names) > 0 {
+		return nil, errors.New("NAMESPACE required when name is provided")
+	}
 	r := resource.NewBuilder(d.restClientGetter()).
 		Unstructured().
 		NamespaceParam(d.Namespace).DefaultNamespace().AllNamespaces(d.AllNamespace()).

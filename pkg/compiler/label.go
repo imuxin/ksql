@@ -14,8 +14,9 @@ import (
 
 type LabelCompare parser.Compare
 
+// pub
 func (c LabelCompare) IntoRequirement() (*labels.Requirement, error) {
-	op, err := c.Op()
+	op, err := c.op()
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +30,7 @@ func (c LabelCompare) IntoRequirement() (*labels.Requirement, error) {
 	return labels.NewRequirement(c.LHS, op, vals)
 }
 
-func (c LabelCompare) Op() (selection.Operator, error) {
+func (c LabelCompare) op() (selection.Operator, error) {
 	if c.NOT {
 		return "", errors.New("unexpected operator `NOT` before label compare expr")
 	}

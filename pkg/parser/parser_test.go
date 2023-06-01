@@ -19,7 +19,7 @@ Compare = "NOT"? (<ident> | <string>) Operation .
 Operation = (("NOT"? "EXISTS") | (("<>" | "<=" | ">=" | "=" | "==" | "<" | ">" | "!=" | ("NOT"? "IN")) Value)) .
 Value = (<number> | <string> | <ident> | ("TRUE" | "FALSE") | "NULL" | Array) .
 Array = "(" Value ("," Value)* ")" .
-Condition = ("AND" | "OR" | "NOT") Compare .
+Condition = ("AND" | "OR") Compare .
 KubernetesFilter = ("LABEL" Compare) | ("NAME" (<ident> | <string>)) .`
 	// fmt.Println(parser.String())
 	assert.Equal(t, EBNF, parser.String())
@@ -28,10 +28,10 @@ KubernetesFilter = ("LABEL" Compare) | ("NAME" (<ident> | <string>)) .`
 func TestParse(t *testing.T) {
 	const demoSQLStr = `
 	SELECT a AS aa, b, "spec.name"
-	    # FROM te.st@cluster1
-		FROM NS
+	    FROM te.st@cluster1
 		WHERE NOT x = 1.1
 		    AND 'in' = 'abc'
+		    AND NOT 'in' = 'abc'
 		    AND 'in' == 'abc'
 			AND xx = TRUE
 			OR abc IN (1,2,3)

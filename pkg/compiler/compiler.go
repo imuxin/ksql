@@ -80,6 +80,21 @@ func (c SelectCompiler[T]) compilePrintColumns() []pretty.PrintColumn {
 	return nil
 }
 
+func (c SelectCompiler[T]) compileWhereFilter() runtime.Filter {
+	filter := make(WhereFilters, 0)
+	if c.ksql.Select.Where == nil {
+		return filter
+	}
+	filter = append(filter,
+		&parser.Condition{
+			Type:    "AND",
+			Compare: c.ksql.Select.Where.First,
+		},
+	)
+	filter = append(filter, c.ksql.Select.Where.Conditions...)
+	return filter
+}
+
 func (c SelectCompiler[T]) Compile() (runtime.Runnable[T], error) {
 	if c.ksql.Select.From.Table == "" {
 		return nil, nil
@@ -92,7 +107,7 @@ func (c SelectCompiler[T]) Compile() (runtime.Runnable[T], error) {
 
 	return runtime.RunnableImpl[T]{
 		Downloader:   d,
-		Filter:       runtime.JSONPathFilter{}, // TODO
+		WhereFilter:  c.compileWhereFilter(),
 		PrintColumns: c.compilePrintColumns(),
 	}, nil
 }

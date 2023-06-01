@@ -91,7 +91,7 @@ type WhereExpr struct {
 }
 
 type Condition struct {
-	Type    string  `parser:" @( 'AND' | 'OR' | 'NOT' ) "`
+	Type    string  `parser:" @( 'AND' | 'OR' ) "`
 	Compare Compare `parser:" @@ "`
 }
 
