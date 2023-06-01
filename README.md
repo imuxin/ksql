@@ -8,6 +8,24 @@ install
 go install github.com/imuxin/ksql
 ```
 
+## Goal #1: bring SQL lanugage for kubernetes command line tool
+
+```bash
+ksql> SELECT * FROM service NAMESPACE default NAME kubernetes
++------------+-----------+
+| NAME       | NAMESPACE |
++------------+-----------+
+| kubernetes | default   |
++------------+-----------+
+ksql> SELECT "{ .metadata.name }" AS NAME, "{ .spec.clusterIP }" AS "CLUSTER-IP", "{ .spec.ports }" FROM svc NAMESPACE default NAME kubernetes
++------------+------------+------------------------------------------------------------------+
+| NAME       | CLUSTER-IP | { .SPEC.PORTS }                                                  |
++------------+------------+------------------------------------------------------------------+
+| kubernetes | 10.8.0.1   | [{"name":"https","port":443,"protocol":"TCP","targetPort":6443}] |
++------------+------------+------------------------------------------------------------------+
+```
+
+## Goal #2: make code `easier` to maintain
 <table>
 <tr>
 <th><code>client-go</code></th>
@@ -60,11 +78,14 @@ func list() ([]T, error) {
 <td>
 
 ```go
-func list() ([]T, error)  {
-	
+import "github.com/imuxin/ksql/pkg/executor"
+
+func list() ([]T, error) {
+	kubeConfig := getKubeConfig()
+	sql := `SELECT * FROM tttt.v1alpha1.k8s.io LABEL key = val`
+	return executor.Execute[T](sql, kubeConfig)
 }
 ```
 </td>
 </tr>
 </table>
-

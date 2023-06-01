@@ -10,7 +10,7 @@ import (
 func TestParser(t *testing.T) {
 	const EBNF = `KSQL = UseStat* SelectStat* .
 UseStat = "USE" <ident> .
-SelectStat = "SELECT" SelectExpr "FROM" FromExpr ("WHERE" WhereExpr)? ("NAMESPACE" | ("NS" (<ident> | <string>)))? KubernetesFilter* .
+SelectStat = "SELECT" SelectExpr "FROM" FromExpr ("WHERE" WhereExpr)? (("NAMESPACE" | "NS") (<ident> | <string>))? KubernetesFilter* .
 SelectExpr = "*" | (Column ("," Column)*) .
 Column = (<ident> | <string>) ("AS" (<ident> | <string> | "NAMESPACE" | "NS" | "NAME" | "SELECT" | "LABEL"))? .
 FromExpr = (<ident> | "NAMESPACE" | "NS" | "NAME" | "SELECT" | "LABEL") ("@" <ident>)? .
