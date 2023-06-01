@@ -12,7 +12,7 @@ func TestParser(t *testing.T) {
 UseStat = "USE" <ident> .
 SelectStat = "SELECT" SelectExpr "FROM" FromExpr ("WHERE" WhereExpr)? ("NAMESPACE" | ("NS" (<ident> | <string>)))? KubernetesFilter* .
 SelectExpr = "*" | (Column ("," Column)*) .
-Column = (<ident> | <string>) ("AS" <ident>)? .
+Column = (<ident> | <string>) ("AS" (<ident> | <string> | "NAMESPACE" | "NS" | "NAME" | "SELECT" | "LABEL"))? .
 FromExpr = (<ident> | "NAMESPACE" | "NS" | "NAME" | "SELECT" | "LABEL") ("@" <ident>)? .
 WhereExpr = Compare Condition* .
 Compare = "NOT"? (<ident> | <string>) Operation .
@@ -21,6 +21,7 @@ Value = (<number> | <string> | <ident> | ("TRUE" | "FALSE") | "NULL" | Array) .
 Array = "(" Value ("," Value)* ")" .
 Condition = ("AND" | "OR" | "NOT") Compare .
 KubernetesFilter = ("LABEL" Compare) | ("NAME" (<ident> | <string>)) .`
+	// fmt.Println(parser.String())
 	assert.Equal(t, EBNF, parser.String())
 }
 

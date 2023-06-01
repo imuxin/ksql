@@ -8,6 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/imuxin/ksql/pkg/ext"
+	"github.com/imuxin/ksql/pkg/pretty"
 )
 
 var (
@@ -18,11 +19,13 @@ var _ Runnable[any] = &RunnableImpl[any]{}
 
 type Runnable[T any] interface {
 	Run() ([]T, error)
+	RunLikeSQL() ([]pretty.PrintColumn, []T, error)
 }
 
 type RunnableImpl[T any] struct {
-	Downloader ext.Downloader
-	Filter     Filter
+	Downloader   ext.Downloader
+	Filter       Filter
+	PrintColumns []pretty.PrintColumn
 }
 
 func (r RunnableImpl[T]) Run() ([]T, error) {
@@ -50,4 +53,9 @@ func (r RunnableImpl[T]) Run() ([]T, error) {
 		result[i] = *item.(*T)
 	}
 	return result, nil
+}
+
+func (r RunnableImpl[T]) RunLikeSQL() ([]pretty.PrintColumn, []T, error) {
+	result, err := r.Run()
+	return r.PrintColumns, result, err
 }

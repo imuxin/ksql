@@ -3,10 +3,6 @@ package repl
 import (
 	"fmt"
 	"io"
-
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
-	"github.com/imuxin/ksql/pkg/executor"
 )
 
 // Error ...
@@ -41,13 +37,7 @@ func REPL() error {
 			continue
 		}
 
-		{
-			result, err := executor.Execute[unstructured.Unstructured](in, nil)
-			if err != nil {
-				fmt.Println(err)
-			}
-			fmt.Println(Output(result))
-		}
+		fmt.Println(Exec(in))
 
 		rl.Accepted()
 	}

@@ -10,7 +10,6 @@ import (
 
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -18,6 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
 	"github.com/imuxin/ksql/pkg/executor"
+	"github.com/imuxin/ksql/pkg/ext"
 	"github.com/imuxin/ksql/pkg/repl"
 )
 
@@ -90,11 +90,11 @@ func TestExecuteAndFormat(t *testing.T) {
 	lo.ForEach(sqls, func(item string, _ int) {
 		b, err := content.ReadFile(item)
 		assert.NoError(t, err)
-		result, err := executor.Execute[unstructured.Unstructured](string(b), restConfig)
+		columns, result, err := executor.ExecuteLikeSQL[ext.Object](string(b), restConfig)
 		assert.NoError(t, err)
 		expect, err := content.ReadFile(strings.TrimSuffix(item, ".sql") + ".output")
 		assert.NoError(t, err)
-		// fmt.Println(repl.Output(result))
-		assert.Equal(t, string(expect), repl.Output(result))
+		// fmt.Println(repl.Format(columns, result))
+		assert.Equal(t, string(expect), repl.Format(columns, result))
 	})
 }

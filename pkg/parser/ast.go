@@ -40,8 +40,8 @@ into_option: {
 type Statement interface{}
 
 type KSQL struct {
-	Use    UseStat    `parser:" @@* "`
-	Select SelectStat `parser:" @@* "`
+	Use    *UseStat    `parser:" @@* "`
+	Select *SelectStat `parser:" @@* "`
 
 	// TODO
 	// Delete DeleteStat `parser:" @@* "`
@@ -72,7 +72,7 @@ type SelectExpr struct {
 
 type Column struct {
 	Name  string `parser:"( @Ident | @String )"`
-	Alias string `parser:" ( 'AS' @Ident )? "`
+	Alias string `parser:" ( 'AS' ( @Ident | @String | @'NAMESPACE' | @'NS' | @'NAME' | @'SELECT' | @'LABEL' ) )? "`
 }
 
 type FromExpr struct {
