@@ -15,15 +15,15 @@ release: build
 test: lint gotestsum goverreport prepare-envtest
 	@echo "running unit test..."
 	@mkdir -p output
-	. $(PWD)/testbin/test.env; \
+	. $(PWD)/bin/testbin/test.env; \
 		$(GOTESTSUM) --format=pkgname --jsonfile=./output/out.json --packages=$(TEST_PACKAGE) -- -race -covermode=atomic -coverprofile=output/coverage.out -coverpkg $(TEST_PACKAGE) $(LDFLAGS)
 	$(GOVERREPORT) -coverprofile=./output/coverage.out
 
 .PHONY: prepare-envtest
 prepare-envtest: setup-envtest
 	@# Prepare a k8s testenv
-	@mkdir -p testbin
-	@$(SETUP_ENVTEST) use --bin-dir "$(PWD)/testbin" 1.27.1 -v debug -p env > $(PWD)/testbin/test.env
+	@mkdir -p $(PWD)/bin/testbin
+	@$(SETUP_ENVTEST) use --bin-dir "$(PWD)/bin/testbin" 1.27.1 -v debug -p env > $(PWD)/bin/testbin/test.env
 
 SETUP_ENVTEST = $(shell pwd)/bin/setup-envtest
 setup-envtest:
