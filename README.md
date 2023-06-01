@@ -98,3 +98,15 @@ func list() ([]T, error) {
 </td>
 </tr>
 </table>
+
+## Roadmap
+
+- [x] Support `SELECT` stat
+- [x] Support `FROM`
+- [x] Support `AS` `LABEL` `NAMESPACE` `NAME`
+- [ ] Support `WHERE` expr
+- [ ] Support `USE` stat
+- [ ] Support `DELETE` stat
+- [ ] Support `UPDATE` stat
+- [ ] Support custom TABLE extensions
+- [ ] ...
