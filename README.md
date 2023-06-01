@@ -1,14 +1,14 @@
 # ksql, a SQL-like language tool for kubernetes
 
-## Quick start
-
-install
+## Install
 
 ```bash
 go install github.com/imuxin/ksql
 ```
 
 ## Goal #1: bring SQL lanugage for kubernetes command line tool
+
+Simple examples:
 
 ```bash
 ksql> SELECT * FROM service NAMESPACE default NAME kubernetes
@@ -24,6 +24,9 @@ ksql> SELECT "{ .metadata.name }" AS NAME, "{ .spec.clusterIP }" AS "CLUSTER-IP"
 | kubernetes | 10.8.0.1   | [{"name":"https","port":443,"protocol":"TCP","targetPort":6443}] |
 +------------+------------+------------------------------------------------------------------+
 ```
+
+more usages, see EBNF description:
+https://github.com/imuxin/ksql/blob/86e62709a6f3f1d7d6da94b02232623b8df04426/pkg/parser/parser_test.go#L11-L23
 
 ## Goal #2: make code `easier` to maintain
 <table>
