@@ -23,6 +23,7 @@ metadata:
     cpaas.io/creator: admin
   labels:
     app: nginx
+    version: "1"
   name: nginx
   namespace: ksql
 spec:
@@ -50,6 +51,7 @@ metadata:
     cpaas.io/creator: admin
   labels:
     app: nginx
+    version: "1"
   name: nginx
   namespace: ksql-system
 spec:

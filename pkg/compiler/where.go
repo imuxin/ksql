@@ -24,22 +24,15 @@ func (cs WhereFilters) Filter(i interface{}) bool {
 	}
 
 	for _, item := range orList {
-		if (Compare)(item.Compare).Filter(i) {
+		if item.Compare.Filter(i) {
 			return true
 		}
 	}
 	for _, item := range andList {
-		if !(Compare)(item.Compare).Filter(i) {
+		if !item.Compare.Filter(i) {
 			return false
 		}
 	}
 
-	return true
-}
-
-type Compare parser.Compare
-
-func (c Compare) Filter(_ interface{}) bool {
-	// TODO
 	return true
 }

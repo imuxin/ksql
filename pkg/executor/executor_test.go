@@ -3,10 +3,18 @@ package executor
 import (
 	"testing"
 
+	"github.com/imuxin/ksql/pkg/common"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func TestXxx(_ *testing.T) {
-	sql := `select * from deploy namespace default label app = "zookeeper" label a in ("1", "2")`
-	_, _ = Execute[unstructured.Unstructured](sql, nil)
+func TestUnSupport(t *testing.T) {
+	for _, sql := range []string{
+		"use xxx",
+		"delete",
+		"update",
+	} {
+		_, err := Execute[unstructured.Unstructured](sql, nil)
+		assert.EqualError(t, err, common.Unsupported().Error())
+	}
 }

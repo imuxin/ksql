@@ -12,6 +12,9 @@ const (
 	\b(
 		  USE
 		| SELECT
+		| DELETE
+		| UPDATE
+		| DESC
 		| AS
 		| FROM
 		| WHERE

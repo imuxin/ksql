@@ -1,7 +1,6 @@
-package compiler
+package parser
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,10 +8,9 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 
-	"github.com/imuxin/ksql/pkg/parser"
+	"github.com/imuxin/ksql/pkg/util/jsonpath"
+	"github.com/samber/lo"
 )
-
-type LabelCompare parser.Compare
 
 // pub
 func (c LabelCompare) IntoRequirement() (*labels.Requirement, error) {
@@ -25,15 +23,12 @@ func (c LabelCompare) IntoRequirement() (*labels.Requirement, error) {
 	switch op {
 	case selection.Exists, selection.DoesNotExist:
 	default:
-		vals = Value(c.Operation.RHS).Into()
+		vals = c.Operation.RHS.Into()
 	}
 	return labels.NewRequirement(c.LHS, op, vals)
 }
 
 func (c LabelCompare) op() (selection.Operator, error) {
-	if c.NOT {
-		return "", errors.New("unexpected operator `NOT` before label compare expr")
-	}
 	switch strings.ToLower(c.Operation.Exists) {
 	case "exists":
 		return selection.Exists, nil
@@ -58,8 +53,6 @@ func (c LabelCompare) op() (selection.Operator, error) {
 	}
 	return "", fmt.Errorf("unexpected operator `%s` in label compare expr", c.Operation.Op)
 }
-
-type Value parser.Value
 
 func (v Value) Into() []string {
 	vals := make([]string, 0)
@@ -92,8 +85,32 @@ func (v Value) IntoSingle() string {
 func (v Value) IntoArray() []string {
 	vals := make([]string, 0)
 	for _, item := range v.Array.Value {
-		val := (Value)(*item).IntoSingle()
+		val := item.IntoSingle()
 		vals = append(vals, val)
 	}
 	return vals
+}
+
+func (c Compare) Filter(i interface{}) bool {
+	lhs, _ := jsonpath.Find(i, c.LHS)
+	rhs := c.RHS.Into()
+
+	var compare = func(lhs string, rhs []string) []string {
+		if len(rhs) == 1 {
+			switch strings.Compare(lhs, rhs[0]) {
+			case -1:
+				return []string{"<", "!=", "<>", "notin"}
+			case 1:
+				return []string{">", "!=", "<>", "notin"}
+			case 0:
+				return []string{"=", "==", "<=", ">=", "in"}
+			}
+		}
+		if lo.Contains(rhs, lhs) {
+			return []string{"in"}
+		}
+		return []string{"notin"}
+	}
+
+	return lo.Contains(compare(lhs, rhs), strings.ToLower(c.Op))
 }

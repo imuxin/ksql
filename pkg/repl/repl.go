@@ -37,7 +37,7 @@ func REPL() error {
 			continue
 		}
 
-		fmt.Println(Exec(in))
+		fmt.Println(Exec(in, nil))
 
 		rl.Accepted()
 	}

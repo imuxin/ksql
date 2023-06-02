@@ -1,13 +1,15 @@
 package repl
 
 import (
+	"k8s.io/client-go/rest"
+
 	"github.com/imuxin/ksql/pkg/executor"
 	"github.com/imuxin/ksql/pkg/ext"
 	"github.com/imuxin/ksql/pkg/pretty"
 )
 
-func Exec(in string) string {
-	columns, result, err := executor.ExecuteLikeSQL[ext.Object](in, nil)
+func Exec(in string, restConfig *rest.Config) string {
+	columns, result, err := executor.ExecuteLikeSQL[ext.Object](in, restConfig)
 	if err != nil {
 		return err.Error()
 	}

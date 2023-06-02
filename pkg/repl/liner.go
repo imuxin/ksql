@@ -8,6 +8,7 @@ import (
 	"text/scanner"
 
 	"github.com/peterh/liner"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -104,7 +105,7 @@ func (cl *contLiner) countDepth() int {
 	sc := new(scanner.Scanner)
 	sc.Init(reader)
 	sc.Error = func(_ *scanner.Scanner, msg string) {
-		fmt.Printf("scanner: %s", msg)
+		klog.V(9).Infof("scanner: %s", msg)
 	}
 
 	depth := 0

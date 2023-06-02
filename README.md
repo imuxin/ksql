@@ -26,7 +26,7 @@ ksql> SELECT "{ .metadata.name }" AS NAME, "{ .spec.clusterIP }" AS "CLUSTER-IP"
 ```
 
 more usages, see EBNF description:
-https://github.com/imuxin/ksql/blob/86e62709a6f3f1d7d6da94b02232623b8df04426/pkg/parser/parser_test.go#L11-L23
+https://github.com/imuxin/ksql/blob/86e62709a6f3f1d7d6da94b02232623b8df04426/pkg/parser/parser_test.go#L11-L25
 
 ## Goal #2: make code `easier` to maintain
 <table>
@@ -104,7 +104,8 @@ func list() ([]T, error) {
 - [x] Support `SELECT` stat
 - [x] Support `FROM`
 - [x] Support `AS` `LABEL` `NAMESPACE` `NAME`
-- [ ] Support `WHERE` expr
+- [x] Support `WHERE` expr
+- [ ] Support `DESC` expr
 - [ ] Support `USE` stat
 - [ ] Support `DELETE` stat
 - [ ] Support `UPDATE` stat

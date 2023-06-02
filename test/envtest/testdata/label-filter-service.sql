@@ -1,1 +1,0 @@
-SELECT * FROM service LABEL app = nginx

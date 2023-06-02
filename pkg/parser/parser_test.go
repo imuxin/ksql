@@ -8,20 +8,23 @@ import (
 )
 
 func TestParser(t *testing.T) {
-	const EBNF = `KSQL = UseStat* SelectStat* .
+	const EBNF = `KSQL = UseStat* SelectStat* DeleteStat* UpdateStat* DescStat* .
 UseStat = "USE" <ident> .
 SelectStat = "SELECT" SelectExpr "FROM" FromExpr ("WHERE" WhereExpr)? (("NAMESPACE" | "NS") (<ident> | <string>))? KubernetesFilter* .
 SelectExpr = "*" | (Column ("," Column)*) .
-Column = (<ident> | <string>) ("AS" (<ident> | <string> | "NAMESPACE" | "NS" | "NAME" | "SELECT" | "LABEL"))? .
+Column = (<ident> | <string>) ("AS" (<ident> | <string> | "FROM" | "NAMESPACE" | "NS" | "NAME" | "SELECT" | "LABEL" | "DESC"))? .
 FromExpr = (<ident> | "NAMESPACE" | "NS" | "NAME" | "SELECT" | "LABEL") ("@" <ident>)? .
 WhereExpr = Compare Condition* .
-Compare = "NOT"? (<ident> | <string>) Operation .
-Operation = (("NOT"? "EXISTS") | (("<>" | "<=" | ">=" | "=" | "==" | "<" | ">" | "!=" | ("NOT"? "IN")) Value)) .
+Compare = "NOT"? (<ident> | <string>) ("<>" | "<=" | ">=" | "=" | "==" | "<" | ">" | "!=" | ("NOT"? "IN")) Value .
 Value = (<number> | <string> | <ident> | ("TRUE" | "FALSE") | "NULL" | Array) .
 Array = "(" Value ("," Value)* ")" .
 Condition = ("AND" | "OR") Compare .
-KubernetesFilter = ("LABEL" Compare) | ("NAME" (<ident> | <string>)) .`
-	// fmt.Println(parser.String())
+KubernetesFilter = ("LABEL" LabelCompare) | ("NAME" (<ident> | <string>)) .
+LabelCompare = (<ident> | <string>) LabelOperation .
+LabelOperation = (("NOT"? "EXISTS") | (("<>" | "<=" | ">=" | "=" | "==" | "!=" | ("NOT"? "IN")) Value)) .
+DeleteStat = "DELETE" .
+UpdateStat = "UPDATE" .
+DescStat = "DESC" <ident> .`
 	assert.Equal(t, EBNF, parser.String())
 }
 

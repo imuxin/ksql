@@ -44,8 +44,10 @@ type KSQL struct {
 	Select *SelectStat `parser:" @@* "`
 
 	// TODO
-	// Delete DeleteStat `parser:" @@* "`
-	// Update UpdateStat `parser:" @@* "`
+	Delete DeleteStat `parser:" @@* "`
+	Update UpdateStat `parser:" @@* "`
+
+	Desc *DescStat `parser:" @@* "`
 }
 
 type UseStat struct {
@@ -62,8 +64,16 @@ type SelectStat struct {
 }
 
 // TODO
-type DeleteStat struct{}
-type UpdateStat struct{}
+type DeleteStat struct {
+	Delete bool `parser:" @'DELETE' "`
+}
+type UpdateStat struct {
+	Update bool `parser:" @'UPDATE' "`
+}
+
+type DescStat struct {
+	Table string `parser:" 'DESC' @Ident "`
+}
 
 type SelectExpr struct {
 	ALL     bool      `parser:" @'*' "`
@@ -72,7 +82,7 @@ type SelectExpr struct {
 
 type Column struct {
 	Name  string `parser:"( @Ident | @String )"`
-	Alias string `parser:" ( 'AS' ( @Ident | @String | @'NAMESPACE' | @'NS' | @'NAME' | @'SELECT' | @'LABEL' ) )? "`
+	Alias string `parser:" ( 'AS' ( @Ident | @String | @'FROM' | @'NAMESPACE' | @'NS' | @'NAME' | @'SELECT' | @'LABEL' | @'DESC' ) )? "`
 }
 
 type FromExpr struct {
@@ -81,8 +91,8 @@ type FromExpr struct {
 }
 
 type KubernetesFilter struct {
-	Label *Compare `parser:"   'LABEL' @@ "`
-	Name  *string  `parser:" | 'NAME' (@Ident | @String) "`
+	Label *LabelCompare `parser:"   'LABEL' @@ "`
+	Name  *string       `parser:" | 'NAME' (@Ident | @String) "`
 }
 
 type WhereExpr struct {
@@ -96,14 +106,20 @@ type Condition struct {
 }
 
 type Compare struct {
-	NOT       bool      `parser:" @'NOT'? "`
-	LHS       string    `parser:" ( @Ident | @String ) "`
-	Operation Operation `parser:" @@ "`
+	NOT bool   `parser:" @'NOT'? "`
+	LHS string `parser:" ( @Ident | @String ) "`
+	Op  string `parser:" @( '<>' | '<=' | '>=' | '=' | '==' | '<' | '>' | '!=' | 'NOT'? 'IN' ) "`
+	RHS Value  `parser:" @@ "`
 }
 
-type Operation struct {
+type LabelCompare struct {
+	LHS       string         `parser:" ( @Ident | @String ) "`
+	Operation LabelOperation `parser:" @@ "`
+}
+
+type LabelOperation struct {
 	Exists string `parser:" ( @( 'NOT'? 'EXISTS') "`
-	Op     string `parser:" | @( '<>' | '<=' | '>=' | '=' | '==' | '<' | '>' | '!=' | 'NOT'? 'IN' ) "`
+	Op     string `parser:" | @( '<>' | '<=' | '>=' | '=' | '==' | '!=' | 'NOT'? 'IN' ) "`
 	RHS    Value  `parser:" @@ ) "`
 }
 
