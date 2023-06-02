@@ -49,7 +49,7 @@ func (d APIServerDownloader) restClientGetter() resource.RESTClientGetter {
 }
 
 func (d APIServerDownloader) Download() ([]ext.Object, error) {
-	if d.AllNamespace() && len(d.Names) > 0 {
+	if d.AllNamespace() && len(d.Names) > 1 {
 		return nil, errors.New("NAMESPACE required when name is provided")
 	}
 	r := resource.NewBuilder(d.restClientGetter()).
