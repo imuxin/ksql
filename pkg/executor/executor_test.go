@@ -18,3 +18,11 @@ func TestUnSupport(t *testing.T) {
 		assert.EqualError(t, err, common.Unsupported().Error())
 	}
 }
+
+func TestDESC(_ *testing.T) {
+	for _, sql := range []string{
+		"desc workflows.core.oam.dev",
+	} {
+		_, _, _ = ExecuteLikeSQL[unstructured.Unstructured](sql, nil)
+	}
+}
