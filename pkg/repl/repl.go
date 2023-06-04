@@ -37,7 +37,12 @@ func REPL() error {
 			continue
 		}
 
-		fmt.Println(Exec(in, nil))
+		res, err := Exec(in, nil)
+		if err != nil {
+			fmt.Printf("error: %s\n", err)
+			return err
+		}
+		fmt.Println(res)
 
 		rl.Accepted()
 	}

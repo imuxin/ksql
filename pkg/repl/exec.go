@@ -8,12 +8,12 @@ import (
 	"github.com/imuxin/ksql/pkg/pretty"
 )
 
-func Exec(in string, restConfig *rest.Config) string {
+func Exec(in string, restConfig *rest.Config) (string, error) {
 	columns, result, err := executor.ExecuteLikeSQL[ext.Object](in, restConfig)
 	if err != nil {
-		return err.Error()
+		return "", err
 	}
-	return Format(columns, result)
+	return Format(columns, result), nil
 }
 
 func Format[T any](columns []pretty.PrintColumn, result []T) string {

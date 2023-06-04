@@ -2,6 +2,7 @@ package kube
 
 import (
 	"errors"
+	"time"
 
 	lop "github.com/samber/lo/parallel"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -12,6 +13,11 @@ import (
 
 	"github.com/imuxin/ksql/pkg/ext"
 )
+
+var DefaultConfigFlags = genericclioptions.NewConfigFlags(true).
+	WithDeprecatedPasswordFlag().
+	WithDiscoveryBurst(300).
+	WithDiscoveryQPS(50.0)
 
 // static (compile time) check that APIServerDownloader satisfies the `Downloader` interface.
 var _ ext.Downloader = &APIServerDownloader{}
@@ -35,17 +41,19 @@ func (d APIServerDownloader) ResourceTypeOrNameArgs() []string {
 
 func (d APIServerDownloader) restClientGetter() resource.RESTClientGetter {
 	var wrapper = func(c *rest.Config) *rest.Config {
+		r := c
 		if d.RestConfig != nil {
-			return d.RestConfig
+			r = d.RestConfig
 		}
-		return c
+
+		if r.Timeout == 0 {
+			r.Timeout = time.Second * 3
+		}
+
+		return r
 	}
 
-	return genericclioptions.NewConfigFlags(true).
-		WithDeprecatedPasswordFlag().
-		WithDiscoveryBurst(300).
-		WithDiscoveryQPS(50.0).
-		WithWrapConfigFn(wrapper)
+	return DefaultConfigFlags.WithWrapConfigFn(wrapper)
 }
 
 func (d APIServerDownloader) Download() ([]ext.Object, error) {
@@ -65,6 +73,9 @@ func (d APIServerDownloader) Download() ([]ext.Object, error) {
 		Flatten().
 		// TransformRequests(o.transformRequests).
 		Do()
+	if r.Err() != nil {
+		return nil, r.Err()
+	}
 	infos, _ := r.Infos()
 
 	return lop.Map(infos, func(item *resource.Info, index int) ext.Object {

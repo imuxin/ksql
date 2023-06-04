@@ -86,11 +86,12 @@ func TestExecuteAndFormat(t *testing.T) {
 		assert.NoError(t, err)
 
 		// columns, result, err := executor.ExecuteLikeSQL[ext.Object](string(b), restConfig)
-		repl.Exec(string(b), restConfig)
 		expect, err := content.ReadFile(strings.TrimSuffix(item, ".sql") + ".output")
 		assert.NoError(t, err)
 		// fmt.Println(repl.Format(columns, result))
-		assert.Equal(t, string(expect), repl.Exec(string(b), restConfig))
+		actual, err := repl.Exec(string(b), restConfig)
+		assert.NoError(t, err)
+		assert.Equal(t, string(expect), actual)
 	})
 
 	assert.NoError(t, env.Stop())
