@@ -53,7 +53,7 @@ func (r DESCRunnableImpl[T]) Run() ([]T, error) {
 		_ = r
 
 		for k, v := range r.Properties {
-			TODO(k, v)
+			TODO(k, v, 0)
 		}
 	}
 	// root := r.Tables[0].Spec.Versions[0].Schema.OpenAPIV3Schema
@@ -69,20 +69,23 @@ func (r DESCRunnableImpl[T]) Run() ([]T, error) {
 	return nil, nil
 }
 
-func TODO(key string, s schema.Structural) {
-	fmt.Println("//", s.Generic.Description)
+func TODO(key string, s schema.Structural, depth int) {
+	tab := strings.Repeat("\t", depth)
+	fmt.Println(tab, "//", s.Generic.Description)
 	switch strings.ToLower(s.Generic.Type) {
 	case "object":
-		fmt.Println(key, "struct{")
+		fmt.Println(tab, key, "struct{")
+		depth += 1
 		for k, v := range s.Properties {
-			TODO(k, v)
+			TODO(k, v, depth)
 		}
 	case "array":
-		fmt.Println(key, "[]struct{")
+		fmt.Println(tab, key, "[]struct{")
+		depth += 1
 		for k, v := range s.Items.Properties {
-			TODO(k, v)
+			TODO(k, v, depth)
 		}
 	default:
-		fmt.Println(key, s.Type)
+		fmt.Println(tab, key, s.Type)
 	}
 }
