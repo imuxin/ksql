@@ -31,6 +31,16 @@ func Compile[T any](sql string, restConfig *rest.Config) (runtime.Runnable[T], [
 		}
 		printColumns = compilePrintColumns(ksql)
 	case ksql.Desc != nil:
+		printColumns = []pretty.PrintColumn{
+			{
+				Name:     "SCHEMA",
+				JSONPath: "{ .spec }",
+			},
+			{
+				Name:     "VERSION",
+				JSONPath: "{ .version }",
+			},
+		}
 		compiler = DescCompiler[T]{
 			ksql:       ksql,
 			restConfig: restConfig,
