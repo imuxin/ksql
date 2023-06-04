@@ -1,14 +1,12 @@
 package compiler
 
 import (
-	lop "github.com/samber/lo/parallel"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/rest"
 
 	"github.com/imuxin/ksql/pkg/ext"
 	extkube "github.com/imuxin/ksql/pkg/ext/kube"
 	"github.com/imuxin/ksql/pkg/parser"
-	"github.com/imuxin/ksql/pkg/pretty"
 	"github.com/imuxin/ksql/pkg/runtime"
 )
 
@@ -44,23 +42,6 @@ func (c SelectCompiler[T]) compileDownloader() (ext.Downloader, error) {
 	}, nil
 }
 
-func (c SelectCompiler[T]) compilePrintColumns() []pretty.PrintColumn {
-	s := c.ksql.Select.Select
-	if !s.ALL {
-		return lop.Map(s.Columns, func(item *parser.Column, index int) pretty.PrintColumn {
-			name := item.Alias
-			if name == "" {
-				name = item.Name
-			}
-			return pretty.PrintColumn{
-				Name:     name,
-				JSONPath: item.Name,
-			}
-		})
-	}
-	return nil
-}
-
 func (c SelectCompiler[T]) compileWhereFilter() runtime.Filter {
 	filter := make(WhereFilters, 0)
 	if c.ksql.Select.Where == nil {
@@ -87,8 +68,7 @@ func (c SelectCompiler[T]) Compile() (runtime.Runnable[T], error) {
 	}
 
 	return runtime.RunnableImpl[T]{
-		Downloader:   d,
-		WhereFilter:  c.compileWhereFilter(),
-		PrintColumns: c.compilePrintColumns(),
+		Downloader:  d,
+		WhereFilter: c.compileWhereFilter(),
 	}, nil
 }

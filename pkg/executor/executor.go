@@ -7,24 +7,19 @@ import (
 	"github.com/imuxin/ksql/pkg/pretty"
 )
 
-func Execute[T any](sql string, restConfig *rest.Config) ([]T, error) {
-	runnable, err := compiler.Compile[T](sql, restConfig)
-	if err != nil {
-		return nil, err
-	}
-	if runnable == nil {
-		return []T{}, nil
-	}
-	return runnable.Run()
-}
-
 func ExecuteLikeSQL[T any](sql string, restConfig *rest.Config) ([]pretty.PrintColumn, []T, error) {
-	runable, err := compiler.Compile[T](sql, restConfig)
+	runnable, printColumns, err := compiler.Compile[T](sql, restConfig)
 	if err != nil {
 		return nil, nil, err
 	}
-	if runable == nil {
+	if runnable == nil {
 		return nil, []T{}, nil
 	}
-	return runable.RunLikeSQL()
+	r, err := runnable.Run()
+	return printColumns, r, err
+}
+
+func Execute[T any](sql string, restConfig *rest.Config) ([]T, error) {
+	_, r, err := ExecuteLikeSQL[T](sql, restConfig)
+	return r, err
 }

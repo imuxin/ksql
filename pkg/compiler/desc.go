@@ -20,7 +20,7 @@ type DescCompiler[T any] struct {
 func (c DescCompiler[T]) Compile() (runtime.Runnable[T], error) {
 	sql := fmt.Sprintf("SELECT * FROM crd NAME %s", c.ksql.Desc.Table)
 	fmt.Println(sql)
-	runnable, err := Compile[apiextensionsv1.CustomResourceDefinition](sql, c.restConfig)
+	runnable, _, err := Compile[apiextensionsv1.CustomResourceDefinition](sql, c.restConfig)
 	if err != nil {
 		return nil, err
 	}
