@@ -1,25 +1,22 @@
 package runtime
 
 import (
-	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/imuxin/ksql/pkg/util"
 	"github.com/samber/lo"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apiserver/schema"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var _ Runnable[any] = &DESCRunnableImpl[any]{}
 
 type DESCRunnableImpl[T any] struct {
 	Tables []apiextensionsv1.CustomResourceDefinition
-}
-
-type Schema struct {
-	Version string `json:"version"`
-	Spec    string `json:"spec"`
 }
 
 /*
@@ -45,85 +42,80 @@ will output like this:
 */
 
 func (r DESCRunnableImpl[T]) Run() ([]T, error) {
+	var result []T
 	for _, item := range r.Tables[0].Spec.Versions {
-		in := item.Schema.OpenAPIV3Schema
 		out := &apiextensions.JSONSchemaProps{}
-		if err := apiextensionsv1.Convert_v1_JSONSchemaProps_To_apiextensions_JSONSchemaProps(in, out, nil); err != nil {
+		if err := apiextensionsv1.Convert_v1_JSONSchemaProps_To_apiextensions_JSONSchemaProps(item.Schema.OpenAPIV3Schema, out, nil); err != nil {
 			return nil, err
 		}
-		r, _ := schema.NewStructural(out)
-		_ = r
-
-		fmt.Println(DeSecrializer(*r))
+		s, err := schema.NewStructural(out)
+		if err != nil {
+			return nil, err
+		}
+		var t T
+		o := reflect.New(reflect.TypeOf(t)).Interface() // o's type is *T
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
+			map[string]interface{}{
+				"version": item.Name,
+				"spec":    DeSecrializer(r.Tables[0].Spec.Names.Kind, *s),
+			}, o); err != nil {
+			return nil, err
+		}
+		result = append(result, *o.(*T))
 	}
-	// root := r.Tables[0].Spec.Versions[0].Schema.OpenAPIV3Schema
-	// repr.Println(schema.NewStructural(root))
-	// required := root.Required
-	// types := root.Type
-	// desc := root.Description
-	// if types == "object" {
-	// 	for _, item := range root.Properties {
-	// 		// 递归 item
-	// 	}
-	// }
-	return nil, nil
+	return result, nil
 }
 
-func DeSecrializer(s schema.Structural) string {
+func DeSecrializer(kind string, s schema.Structural) string {
 	var lines []string
-	inner("", s, -1, &lines)
-	return strings.Join(lines, "")
+	inner(color.YellowString("type")+" "+color.RedString(kind), s, 0, &lines)
+	return strings.Join(lines, "\n")
 }
 
 func inner(key string, s schema.Structural, depth int, lines *[]string) {
-	key = color.MagentaString(key)
-	var tab string
-	if depth > 0 {
-		tab = strings.Repeat("\t", depth)
+	var tab = strings.Repeat("  ", depth)
+
+	// Description
+	for _, item := range util.WrapText(s.Generic.Description, 80) {
+		*lines = append(*lines, tab+color.WhiteString("// "+item))
 	}
 
-	*lines = append(*lines, fmt.Sprintln(tab, color.WhiteString("// "+s.Generic.Description)))
-	switch strings.ToLower(s.Generic.Type) {
+	t := strings.ToLower(s.Generic.Type)
+	switch t {
 	case "object":
-		*lines = append(*lines, fmt.Sprintln(tab, key, "struct{"))
-		depth++
-		for k, v := range s.Properties {
-			inner(k, v, depth, lines)
-		}
-	case "array":
-
-		if lo.Contains([]string{"object", "array"}, s.Items.Generic.Type) {
-			*lines = append(*lines, fmt.Sprintln(tab, key, "[]struct{"))
-			depth++
-			for k, v := range s.Items.Properties {
-				inner(k, v, depth, lines)
+		if len(s.Properties) == 0 {
+			t = "string"
+			if s.AdditionalProperties != nil && s.AdditionalProperties.Structural.Type != "" {
+				t = s.AdditionalProperties.Structural.Type
 			}
-		} else {
-			*lines = append(*lines, fmt.Sprintln(tab, key, "[]"+color.GreenString(s.Items.Generic.Type)))
+			*lines = append(*lines, tab+key+" "+"map[string]"+t)
 			return
 		}
+		*lines = append(*lines, tab+key+" "+color.GreenString("struct")+"{")
+		depth++
+		for k, v := range s.Properties {
+			inner(color.MagentaString(k), v, depth, lines)
+		}
+
+		*lines = append(*lines, tab+"}")
+	case "array":
+		if lo.Contains([]string{"object", "array"}, s.Items.Generic.Type) {
+			*lines = append(*lines, tab+key+" []"+color.GreenString("struct")+"{")
+			depth++
+			for k, v := range s.Items.Properties {
+				inner(color.MagentaString(k), v, depth, lines)
+			}
+			*lines = append(*lines, tab+"}")
+		} else {
+			*lines = append(*lines, tab+key+" []"+color.GreenString(s.Items.Generic.Type))
+		}
+	case "boolean":
+		t = "bool"
+		*lines = append(*lines, tab+key+" "+color.GreenString(t))
+	case "integer":
+		t = "int"
+		*lines = append(*lines, tab+key+" "+color.GreenString(t))
 	default:
-		*lines = append(*lines, fmt.Sprintln(tab, key, color.GreenString(s.Generic.Type)))
+		*lines = append(*lines, tab+key+" "+color.GreenString(t))
 	}
 }
-
-// func TODO(key string, s schema.Structural, depth int) {
-// 	tab := strings.Repeat("\t", depth)
-// 	fmt.Println(tab, "//", s.Generic.Description)
-// 	switch strings.ToLower(s.Generic.Type) {
-// 	case "object":
-// 		fmt.Println(tab, key, "struct{")
-// 		depth += 1
-// 		for k, v := range s.Properties {
-// 			TODO(k, v, depth)
-// 		}
-// 	case "array":
-// 		fmt.Println(tab, key, "[]struct{")
-// 		depth += 1
-// 		for k, v := range s.Items.Properties {
-// 			TODO(k, v, depth)
-// 		}
-// 	default:
-// 		fmt.Println(tab, key, s.Type)
-// 	}
-// }
