@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fatih/color"
+	"github.com/samber/lo"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apiserver/schema"
@@ -52,9 +54,7 @@ func (r DESCRunnableImpl[T]) Run() ([]T, error) {
 		r, _ := schema.NewStructural(out)
 		_ = r
 
-		for k, v := range r.Properties {
-			TODO(k, v, 0)
-		}
+		fmt.Println(DeSecrializer(*r))
 	}
 	// root := r.Tables[0].Spec.Versions[0].Schema.OpenAPIV3Schema
 	// repr.Println(schema.NewStructural(root))
@@ -69,23 +69,61 @@ func (r DESCRunnableImpl[T]) Run() ([]T, error) {
 	return nil, nil
 }
 
-func TODO(key string, s schema.Structural, depth int) {
-	tab := strings.Repeat("\t", depth)
-	fmt.Println(tab, "//", s.Generic.Description)
+func DeSecrializer(s schema.Structural) string {
+	var lines []string
+	inner("", s, -1, &lines)
+	return strings.Join(lines, "")
+}
+
+func inner(key string, s schema.Structural, depth int, lines *[]string) {
+	key = color.MagentaString(key)
+	var tab string
+	if depth > 0 {
+		tab = strings.Repeat("\t", depth)
+	}
+
+	*lines = append(*lines, fmt.Sprintln(tab, color.WhiteString("// "+s.Generic.Description)))
 	switch strings.ToLower(s.Generic.Type) {
 	case "object":
-		fmt.Println(tab, key, "struct{")
-		depth += 1
+		*lines = append(*lines, fmt.Sprintln(tab, key, "struct{"))
+		depth++
 		for k, v := range s.Properties {
-			TODO(k, v, depth)
+			inner(k, v, depth, lines)
 		}
 	case "array":
-		fmt.Println(tab, key, "[]struct{")
-		depth += 1
-		for k, v := range s.Items.Properties {
-			TODO(k, v, depth)
+
+		if lo.Contains([]string{"object", "array"}, s.Items.Generic.Type) {
+			*lines = append(*lines, fmt.Sprintln(tab, key, "[]struct{"))
+			depth++
+			for k, v := range s.Items.Properties {
+				inner(k, v, depth, lines)
+			}
+		} else {
+			*lines = append(*lines, fmt.Sprintln(tab, key, "[]"+color.GreenString(s.Items.Generic.Type)))
+			return
 		}
 	default:
-		fmt.Println(tab, key, s.Type)
+		*lines = append(*lines, fmt.Sprintln(tab, key, color.GreenString(s.Generic.Type)))
 	}
 }
+
+// func TODO(key string, s schema.Structural, depth int) {
+// 	tab := strings.Repeat("\t", depth)
+// 	fmt.Println(tab, "//", s.Generic.Description)
+// 	switch strings.ToLower(s.Generic.Type) {
+// 	case "object":
+// 		fmt.Println(tab, key, "struct{")
+// 		depth += 1
+// 		for k, v := range s.Properties {
+// 			TODO(k, v, depth)
+// 		}
+// 	case "array":
+// 		fmt.Println(tab, key, "[]struct{")
+// 		depth += 1
+// 		for k, v := range s.Items.Properties {
+// 			TODO(k, v, depth)
+// 		}
+// 	default:
+// 		fmt.Println(tab, key, s.Type)
+// 	}
+// }
