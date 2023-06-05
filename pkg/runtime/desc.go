@@ -73,7 +73,7 @@ func DeSecrializer(kind string, s schema.Structural) string {
 }
 
 func inner(key string, s schema.Structural, depth int, lines *[]string) {
-	var tab = strings.Repeat("  ", depth)
+	var tab = strings.Repeat(strings.Repeat(" ", 4), depth)
 
 	// Description
 	for _, item := range util.WrapText(s.Generic.Description, 80) {
@@ -88,22 +88,21 @@ func inner(key string, s schema.Structural, depth int, lines *[]string) {
 			if s.AdditionalProperties != nil && s.AdditionalProperties.Structural.Type != "" {
 				t = s.AdditionalProperties.Structural.Type
 			}
-			*lines = append(*lines, tab+key+" "+"map[string]"+t)
+			*lines = append(*lines, tab+key+" "+color.GreenString("map[string]"+t))
 			return
 		}
-		*lines = append(*lines, tab+key+" "+color.GreenString("struct")+"{")
+		*lines = append(*lines, tab+key+" "+color.GreenString("struct")+" {")
 		depth++
-		for k, v := range s.Properties {
-			inner(color.MagentaString(k), v, depth, lines)
+		for item := range util.NewSortRange(s.Properties).Iter() {
+			inner(color.MagentaString(item.Key), item.Value, depth, lines)
 		}
-
 		*lines = append(*lines, tab+"}")
 	case "array":
 		if lo.Contains([]string{"object", "array"}, s.Items.Generic.Type) {
-			*lines = append(*lines, tab+key+" []"+color.GreenString("struct")+"{")
+			*lines = append(*lines, tab+key+" []"+color.GreenString("struct")+" {")
 			depth++
-			for k, v := range s.Items.Properties {
-				inner(color.MagentaString(k), v, depth, lines)
+			for item := range util.NewSortRange(s.Items.Properties).Iter() {
+				inner(color.MagentaString(item.Key), item.Value, depth, lines)
 			}
 			*lines = append(*lines, tab+"}")
 		} else {
