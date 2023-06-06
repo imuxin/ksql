@@ -84,7 +84,7 @@ func inner(key string, s schema.Structural, depth int, lines *[]string) {
 	switch t {
 	case "object":
 		if len(s.Properties) == 0 {
-			t = "string"
+			t = "interface{}"
 			if s.AdditionalProperties != nil && s.AdditionalProperties.Structural.Type != "" {
 				t = s.AdditionalProperties.Structural.Type
 			}
