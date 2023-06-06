@@ -1,1 +1,1 @@
-DESC service
+DESC virtualservices.networking.istio.io

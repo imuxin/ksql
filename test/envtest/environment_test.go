@@ -44,6 +44,30 @@ type resource struct {
 	Metadata   map[string]interface{} `json:"metadata"`
 }
 
+func prepareCRD(t *testing.T, restConfig *rest.Config) {
+	restConfig.APIPath = "apis"
+	restConfig.NegotiatedSerializer = scheme.Codecs
+	data, _ := content.ReadFile("testdata/crd.yaml")
+	for _, item := range strings.Split(string(data), "---") {
+		r := &resource{}
+		assert.NoError(t, utilyaml.Unmarshal([]byte(item), r))
+		gv, err := schema.ParseGroupVersion(r.APIVersion)
+		assert.NoError(t, err)
+		restConfig.GroupVersion = &gv
+		restCli, err := rest.RESTClientFor(restConfig)
+		assert.NoError(t, err)
+
+		jsonBody, err := yaml.YAMLToJSON([]byte(item))
+		assert.NoError(t, err)
+		req := restCli.Post().Resource(strings.ToLower(r.Kind) + "s").Body(jsonBody)
+		if r.Metadata["namespace"] != nil {
+			req = req.Namespace(r.Metadata["namespace"].(string))
+		}
+		err = req.Do(context.TODO()).Error()
+		assert.NoError(t, err)
+	}
+}
+
 func prepareDatabase(t *testing.T, restConfig *rest.Config) {
 	restConfig.APIPath = "api"
 	restConfig.NegotiatedSerializer = scheme.Codecs
@@ -74,6 +98,7 @@ func TestExecuteAndFormat(t *testing.T) {
 	assert.NoError(t, err)
 
 	prepareDatabase(t, restConfig)
+	prepareCRD(t, restConfig)
 
 	files, err := getAllFilenames(&content)
 	assert.NoError(t, err)
