@@ -1,5 +1,8 @@
 # ksql, a SQL-like language tool for kubernetes
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/887f9700e424478e9be6dc88237e2f72)](https://app.codacy.com/gh/imuxin/ksql/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/887f9700e424478e9be6dc88237e2f72)](https://app.codacy.com/gh/imuxin/ksql/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
+
 ## Install
 
 ```bash
