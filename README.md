@@ -105,7 +105,7 @@ func list() ([]T, error) {
 - [x] Support `FROM`
 - [x] Support `AS` `LABEL` `NAMESPACE` `NAME`
 - [x] Support `WHERE` expr
-- [ ] Support `DESC` expr
+- [x] Support `DESC` expr
 - [ ] Support `USE` stat
 - [ ] Support `DELETE` stat
 - [ ] Support `UPDATE` stat
