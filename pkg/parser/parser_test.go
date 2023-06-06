@@ -22,34 +22,54 @@ Condition = ("AND" | "OR") Compare .
 KubernetesFilter = ("LABEL" LabelCompare) | ("NAME" (<ident> | <string>)) .
 LabelCompare = (<ident> | <string>) LabelOperation .
 LabelOperation = (("NOT"? "EXISTS") | (("<>" | "<=" | ">=" | "=" | "==" | "!=" | ("NOT"? "IN")) Value)) .
-DeleteStat = "DELETE" .
+DeleteStat = "DELETE" "FROM" FromExpr ("WHERE" WhereExpr)? (("NAMESPACE" | "NS") (<ident> | <string>))? KubernetesFilter* .
 UpdateStat = "UPDATE" .
 DescStat = "DESC" <ident> .`
+
+	// fmt.Println(parser.String())
 	assert.Equal(t, EBNF, parser.String())
 }
 
 func TestParse(t *testing.T) {
-	const demoSQLStr = `
-	SELECT a AS aa, b, "spec.name"
-	    FROM te.st@cluster1
-		WHERE NOT x = 1.1
-		    AND 'in' = 'abc'
-		    AND NOT 'in' = 'abc'
-		    AND 'in' == 'abc'
-			AND xx = TRUE
-			OR abc IN (1,2,3)
-			OR abc NOT IN (1,2,3) # dfadf
-		# NAMESPACE istiosystem
-		NS istiosystem
-		LABEL cluster EXISTS
-		LABEL cluster NOT EXISTS
-		LABEL k8s.io/proj = "sample"
-		NAME istiod-116
-		NAME envoy
-	`
-	if ksql, err := Parse(demoSQLStr); err != nil {
-		t.Error(err)
-	} else {
-		repr.Println(ksql)
+	for _, sql := range []string{
+		`SELECT a AS aa, b, "spec.name"
+	    	FROM te.st@cluster1
+			WHERE NOT x = 1.1
+				AND 'in' = 'abc'
+				AND NOT 'in' = 'abc'
+				AND 'in' == 'abc'
+				AND xx = TRUE
+				OR abc IN (1,2,3)
+				OR abc NOT IN (1,2,3) # dfadf
+			# NAMESPACE istiosystem
+			NS istiosystem
+			LABEL cluster EXISTS
+			LABEL cluster NOT EXISTS
+			LABEL k8s.io/proj = "sample"
+			NAME istiod-116
+			NAME envoy
+		`,
+		`DELETE FROM te.st@cluster1
+			WHERE NOT x = 1.1
+				AND 'in' = 'abc'
+				AND NOT 'in' = 'abc'
+				AND 'in' == 'abc'
+				AND xx = TRUE
+				OR abc IN (1,2,3)
+				OR abc NOT IN (1,2,3) # dfadf
+			# NAMESPACE istiosystem
+			NS istiosystem
+			LABEL cluster EXISTS
+			LABEL cluster NOT EXISTS
+			LABEL k8s.io/proj = "sample"
+			NAME istiod-116
+			NAME envoy
+		`,
+	} {
+		if ksql, err := Parse(sql); err != nil {
+			t.Error(err)
+		} else {
+			repr.Println(ksql)
+		}
 	}
 }

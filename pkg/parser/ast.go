@@ -63,10 +63,14 @@ type SelectStat struct {
 	KubernetesFilters []*KubernetesFilter `parser:" @@* "`
 }
 
-// TODO
 type DeleteStat struct {
-	Delete bool `parser:" @'DELETE' "`
+	From              FromExpr            `parser:" 'DELETE' 'FROM' @@ "`
+	Where             *WhereExpr          `parser:" ( 'WHERE' @@ )? "`
+	Namespace         string              `parser:" ( ( 'NAMESPACE' | 'NS' ) ( @Ident | @String ) )? "`
+	KubernetesFilters []*KubernetesFilter `parser:" @@* "`
 }
+
+// TODO
 type UpdateStat struct {
 	Update bool `parser:" @'UPDATE' "`
 }
