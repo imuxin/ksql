@@ -1,21 +1,22 @@
-package runtime
+package kube
 
 import (
-	"reflect"
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/imuxin/ksql/pkg/util"
 	"github.com/samber/lo"
+
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apiserver/schema"
-	"k8s.io/apimachinery/pkg/runtime"
+
+	"github.com/imuxin/ksql/pkg/ext"
+	"github.com/imuxin/ksql/pkg/util"
 )
 
-var _ Runnable[any] = &DESCRunnableImpl[any]{}
+var _ ext.Describer = &Describer{}
 
-type DESCRunnableImpl[T any] struct {
+type Describer struct {
 	Tables []apiextensionsv1.CustomResourceDefinition
 }
 
@@ -41,8 +42,11 @@ will output like this:
 	}
 */
 
-func (r DESCRunnableImpl[T]) Run() ([]T, error) {
-	var result []T
+func (r Describer) Desc() ([]ext.Object, error) {
+	var result []ext.Object
+	if len(r.Tables) == 0 {
+		return nil, nil
+	}
 	for _, item := range r.Tables[0].Spec.Versions {
 		out := &apiextensions.JSONSchemaProps{}
 		if err := apiextensionsv1.Convert_v1_JSONSchemaProps_To_apiextensions_JSONSchemaProps(item.Schema.OpenAPIV3Schema, out, nil); err != nil {
@@ -52,16 +56,10 @@ func (r DESCRunnableImpl[T]) Run() ([]T, error) {
 		if err != nil {
 			return nil, err
 		}
-		var t T
-		o := reflect.New(reflect.TypeOf(t)).Interface() // o's type is *T
-		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(
-			map[string]interface{}{
-				"version": item.Name,
-				"spec":    DeSecrializer(r.Tables[0].Spec.Names.Kind, *s),
-			}, o); err != nil {
-			return nil, err
-		}
-		result = append(result, *o.(*T))
+		result = append(result, map[string]interface{}{
+			"version": item.Name,
+			"spec":    DeSecrializer(r.Tables[0].Spec.Names.Kind, *s),
+		})
 	}
 	return result, nil
 }

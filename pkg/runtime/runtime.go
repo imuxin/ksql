@@ -1,53 +1,43 @@
 package runtime
 
 import (
-	"context"
-	"reflect"
-
-	"github.com/reactivex/rxgo/v2"
-	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
 
 	"github.com/imuxin/ksql/pkg/ext"
+	"github.com/imuxin/ksql/pkg/parser"
 )
 
 var (
 	DefaultDatabase = ""
 )
 
-var _ Runnable[any] = &RunnableImpl[any]{}
-
 type Runnable[T any] interface {
 	Run() ([]T, error)
 }
 
+var _ Runnable[any] = &RunnableImpl[any]{}
+
 type RunnableImpl[T any] struct {
-	Downloader  ext.Downloader
-	WhereFilter Filter
+	ksql        *parser.KSQL
+	restConfig  *rest.Config
+	downloader  ext.Downloader
+	whereFilter ext.Filter
+}
+
+func NewDefaultRunnable[T any](ksql *parser.KSQL, restConfig *rest.Config) Runnable[T] {
+	return &RunnableImpl[T]{
+		ksql:       ksql,
+		restConfig: restConfig,
+	}
 }
 
 func (r RunnableImpl[T]) Run() ([]T, error) {
-	list, err := r.Downloader.Download()
-	if err != nil {
-		return nil, err
+	// TODO: 支持自定义 Table 拓展
+	switch {
+	case r.ksql.Desc != nil:
+		return r.Desc()
+	case r.ksql.Select != nil:
+		return r.List()
 	}
-	_r, err := rxgo.Just(list)().
-		Filter(func(i interface{}) bool {
-			return r.WhereFilter.Filter(i)
-		}).
-		Map(func(_ context.Context, i interface{}) (interface{}, error) {
-			var t T
-			o := reflect.New(reflect.TypeOf(t)).Interface() // o's type is *T
-			err := runtime.DefaultUnstructuredConverter.FromUnstructured(i.(ext.Object), o)
-			return o, err
-		}).
-		ToSlice(len(list))
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]T, len(_r))
-	for i, item := range _r {
-		result[i] = *item.(*T)
-	}
-	return result, nil
+	return nil, nil
 }

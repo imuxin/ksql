@@ -1,15 +1,18 @@
-package compiler
+package ext
 
 import (
 	"strings"
 
 	"github.com/imuxin/ksql/pkg/parser"
-	"github.com/imuxin/ksql/pkg/runtime"
 )
+
+type Filter interface {
+	Filter(i any) bool
+}
 
 type WhereFilters []*parser.Condition
 
-var _ runtime.Filter = &WhereFilters{}
+var _ Filter = &WhereFilters{}
 
 func (cs WhereFilters) Filter(i interface{}) bool {
 	andList := make([]*parser.Condition, 0)
@@ -35,4 +38,19 @@ func (cs WhereFilters) Filter(i interface{}) bool {
 	}
 
 	return true
+}
+
+func CompileWhereFilter(whereExpr *parser.WhereExpr) Filter {
+	filter := make(WhereFilters, 0)
+	if whereExpr == nil {
+		return filter
+	}
+	filter = append(filter,
+		&parser.Condition{
+			Type:    "AND",
+			Compare: whereExpr.First,
+		},
+	)
+	filter = append(filter, whereExpr.Conditions...)
+	return filter
 }

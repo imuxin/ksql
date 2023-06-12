@@ -1,11 +1,12 @@
-include $(PWD)/.env
+GO ?= go
+TEST_PACKAGE = "./..."
 
 haha:
 	@echo ${OSFLAG}
 
 .PHONY: build
 build:
-	$(GO) build $(LDFLAGS)
+	CGO_ENABLED=0 $(GO) build
 
 .PHONY: release
 release: export BUILD = release
@@ -16,7 +17,7 @@ test: lint gotestsum goverreport prepare-envtest
 	@echo "running unit test..."
 	@mkdir -p output
 	. $(PWD)/bin/testbin/test.env; \
-		$(GOTESTSUM) --format=pkgname --jsonfile=./output/out.json --packages=$(TEST_PACKAGE) -- -race -covermode=atomic -coverprofile=output/coverage.out -coverpkg $(TEST_PACKAGE) $(LDFLAGS)
+		CGO_ENABLED=0 $(GOTESTSUM) --format=pkgname --jsonfile=./output/out.json --packages=$(TEST_PACKAGE) -- -covermode=atomic -coverprofile=output/coverage.out -coverpkg $(TEST_PACKAGE)
 	$(GOVERREPORT) -coverprofile=./output/coverage.out
 
 .PHONY: prepare-envtest

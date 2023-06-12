@@ -2,6 +2,7 @@ package compiler
 
 import (
 	lop "github.com/samber/lo/parallel"
+
 	"k8s.io/client-go/rest"
 
 	"github.com/imuxin/ksql/pkg/common"
@@ -19,16 +20,12 @@ func Compile[T any](sql string, restConfig *rest.Config) (runtime.Runnable[T], [
 		return nil, nil, nil
 	}
 
-	var compiler Compiler[T]
+	r := runtime.NewDefaultRunnable[T](ksql, restConfig)
 	var printColumns []pretty.PrintColumn
 	switch {
 	case ksql.Use != nil:
 		return nil, nil, common.Unsupported()
 	case ksql.Select != nil:
-		compiler = SelectCompiler[T]{
-			ksql:       ksql,
-			restConfig: restConfig,
-		}
 		printColumns = compilePrintColumns(ksql)
 	case ksql.Desc != nil:
 		printColumns = []pretty.PrintColumn{
@@ -41,16 +38,10 @@ func Compile[T any](sql string, restConfig *rest.Config) (runtime.Runnable[T], [
 				JSONPath: "{ .version }",
 			},
 		}
-		compiler = DescCompiler[T]{
-			ksql:       ksql,
-			restConfig: restConfig,
-		}
 	default: // TODO: support delete, update
 		return nil, nil, common.Unsupported()
 	}
-
-	runnable, err := compiler.Compile()
-	return runnable, printColumns, err
+	return r, printColumns, err
 }
 
 func compilePrintColumns(ksql *parser.KSQL) []pretty.PrintColumn {
@@ -68,8 +59,4 @@ func compilePrintColumns(ksql *parser.KSQL) []pretty.PrintColumn {
 		})
 	}
 	return nil
-}
-
-type Compiler[T any] interface {
-	Compile() (runtime.Runnable[T], error)
 }
