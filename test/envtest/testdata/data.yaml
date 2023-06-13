@@ -2,6 +2,15 @@ apiVersion: v1
 kind: Namespace
 metadata:
   annotations:
+    ksql.io/display: "test for delete"
+  labels:
+    kubernetes.io/metadata.name: test-delete
+  name: test-delete
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
     ksql.io/display: "ksql for test"
   labels:
     kubernetes.io/metadata.name: ksql
