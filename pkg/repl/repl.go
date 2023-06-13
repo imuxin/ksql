@@ -40,9 +40,9 @@ func REPL() error {
 		res, err := Exec(in, nil)
 		if err != nil {
 			fmt.Printf("error: %s\n", err)
-			return err
+		} else {
+			fmt.Println(res)
 		}
-		fmt.Println(res)
 
 		rl.Accepted()
 	}

@@ -20,7 +20,7 @@ var _ Runnable[any] = &RunnableImpl[any]{}
 type RunnableImpl[T any] struct {
 	ksql        *parser.KSQL
 	restConfig  *rest.Config
-	downloader  ext.Downloader
+	plugin      ext.Plugin
 	whereFilter ext.Filter
 }
 
@@ -38,6 +38,8 @@ func (r RunnableImpl[T]) Run() ([]T, error) {
 		return r.Desc()
 	case r.ksql.Select != nil:
 		return r.List()
+	case r.ksql.Delete != nil:
+		return r.Delete()
 	}
 	return nil, nil
 }

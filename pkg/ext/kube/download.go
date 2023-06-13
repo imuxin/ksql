@@ -5,13 +5,17 @@ import (
 	"time"
 
 	lop "github.com/samber/lo/parallel"
+
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
 
 	"github.com/imuxin/ksql/pkg/ext"
+	"github.com/imuxin/ksql/pkg/util/jsonpath"
 )
 
 var DefaultConfigFlags = genericclioptions.NewConfigFlags(true).
@@ -19,10 +23,10 @@ var DefaultConfigFlags = genericclioptions.NewConfigFlags(true).
 	WithDiscoveryBurst(300).
 	WithDiscoveryQPS(50.0)
 
-// static (compile time) check that APIServerDownloader satisfies the `Downloader` interface.
-var _ ext.Downloader = &APIServerDownloader{}
+// static (compile time) check that APIServerPlugin satisfies the `Downloader` interface.
+var _ ext.Plugin = &APIServerPlugin{}
 
-type APIServerDownloader struct {
+type APIServerPlugin struct {
 	RestConfig *rest.Config
 	Database   string
 	Table      string
@@ -31,15 +35,19 @@ type APIServerDownloader struct {
 	Selector   labels.Selector
 }
 
-func (d APIServerDownloader) AllNamespace() bool {
+func (d APIServerPlugin) restConfig() (*rest.Config, error) {
+	return d.restClientGetter().ToRESTConfig()
+}
+
+func (d APIServerPlugin) AllNamespace() bool {
 	return d.Namespace == ""
 }
 
-func (d APIServerDownloader) ResourceTypeOrNameArgs() []string {
+func (d APIServerPlugin) ResourceTypeOrNameArgs() []string {
 	return append([]string{d.Table}, d.Names...)
 }
 
-func (d APIServerDownloader) restClientGetter() resource.RESTClientGetter {
+func (d APIServerPlugin) restClientGetter() resource.RESTClientGetter {
 	var wrapper = func(c *rest.Config) *rest.Config {
 		r := c
 		if d.RestConfig != nil {
@@ -56,7 +64,7 @@ func (d APIServerDownloader) restClientGetter() resource.RESTClientGetter {
 	return DefaultConfigFlags.WithWrapConfigFn(wrapper)
 }
 
-func (d APIServerDownloader) Download() ([]ext.Object, error) {
+func (d APIServerPlugin) Download() ([]ext.Object, error) {
 	if d.AllNamespace() && len(d.Names) > 1 {
 		return nil, errors.New("NAMESPACE required when name is provided")
 	}
@@ -81,4 +89,72 @@ func (d APIServerDownloader) Download() ([]ext.Object, error) {
 	return lop.Map(infos, func(item *resource.Info, index int) ext.Object {
 		return item.Object.(*unstructured.Unstructured).Object
 	}), nil
+}
+
+func (d APIServerPlugin) gvk(obj ext.Object) schema.GroupVersionKind {
+	apiVersion, _ := jsonpath.Find(obj, "{ .apiVersion }")
+	kind, _ := jsonpath.Find(obj, "{ .kind }")
+	return schema.FromAPIVersionAndKind(apiVersion, kind)
+}
+
+func (d APIServerPlugin) restClientFor(obj ext.Object) (*rest.RESTClient, error) {
+	cfg, err := d.restConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	gvk := d.gvk(obj)
+	gv := gvk.GroupVersion()
+
+	cfg.ContentConfig = resource.UnstructuredPlusDefaultContentConfig()
+	cfg.GroupVersion = &gv
+	if len(gv.Group) == 0 {
+		cfg.APIPath = "/api"
+	} else {
+		cfg.APIPath = "/apis"
+	}
+	return rest.RESTClientFor(cfg)
+}
+
+func (d APIServerPlugin) restMappingFor(obj ext.Object) (*meta.RESTMapping, error) {
+	mapper, err := d.restClientGetter().ToRESTMapper()
+	if err != nil {
+		return nil, err
+	}
+
+	gvk := d.gvk(obj)
+	return mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+}
+
+func (d APIServerPlugin) resourceHelper(obj ext.Object) (*resource.Helper, error) {
+	restClient, err := d.restClientFor(obj)
+	if err != nil {
+		return nil, err
+	}
+	restMapping, err := d.restMappingFor(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return resource.NewHelper(
+		restClient, restMapping,
+	), nil
+}
+
+func (d APIServerPlugin) Delete(list []ext.Object) ([]ext.Object, error) {
+	var result []ext.Object
+	for _, item := range list {
+		helper, err := d.resourceHelper(item)
+		if err != nil {
+			return nil, err
+		}
+		namespace, _ := jsonpath.Find(item, "{ .metadata.namespace }")
+		name, _ := jsonpath.Find(item, "{ .metadata.name }")
+		r, err := helper.Delete(namespace, name)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, r.(*unstructured.Unstructured).Object)
+	}
+	return result, nil
 }

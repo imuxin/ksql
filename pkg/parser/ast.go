@@ -44,8 +44,8 @@ type KSQL struct {
 	Select *SelectStat `parser:" @@* "`
 
 	// TODO
-	Delete DeleteStat `parser:" @@* "`
-	Update UpdateStat `parser:" @@* "`
+	Delete *DeleteStat `parser:" @@* "`
+	Update *UpdateStat `parser:" @@* "`
 
 	Desc *DescStat `parser:" @@* "`
 }

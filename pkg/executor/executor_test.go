@@ -11,7 +11,6 @@ import (
 func TestUnSupport(t *testing.T) {
 	for _, sql := range []string{
 		"use xxx",
-		"delete from xxx",
 		"update",
 	} {
 		_, err := Execute[unstructured.Unstructured](sql, nil)

@@ -27,6 +27,7 @@ func Compile[T any](sql string, restConfig *rest.Config) (runtime.Runnable[T], [
 		return nil, nil, common.Unsupported()
 	case ksql.Select != nil:
 		printColumns = compilePrintColumns(ksql)
+	case ksql.Delete != nil:
 	case ksql.Desc != nil:
 		printColumns = []pretty.PrintColumn{
 			{
@@ -38,7 +39,7 @@ func Compile[T any](sql string, restConfig *rest.Config) (runtime.Runnable[T], [
 				JSONPath: "{ .version }",
 			},
 		}
-	default: // TODO: support delete, update
+	default: // TODO: support update
 		return nil, nil, common.Unsupported()
 	}
 	return r, printColumns, err
