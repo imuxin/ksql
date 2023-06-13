@@ -12,6 +12,7 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/imuxin/ksql/pkg/ext"
+	"github.com/imuxin/ksql/pkg/util/jsonpath"
 )
 
 var DefaultConfigFlags = genericclioptions.NewConfigFlags(true).
@@ -19,10 +20,10 @@ var DefaultConfigFlags = genericclioptions.NewConfigFlags(true).
 	WithDiscoveryBurst(300).
 	WithDiscoveryQPS(50.0)
 
-// static (compile time) check that APIServerDownloader satisfies the `Downloader` interface.
-var _ ext.Downloader = &APIServerDownloader{}
+// static (compile time) check that APIServerPlugin satisfies the `Downloader` interface.
+var _ ext.Plugin = &APIServerPlugin{}
 
-type APIServerDownloader struct {
+type APIServerPlugin struct {
 	RestConfig *rest.Config
 	Database   string
 	Table      string
@@ -31,15 +32,15 @@ type APIServerDownloader struct {
 	Selector   labels.Selector
 }
 
-func (d APIServerDownloader) AllNamespace() bool {
+func (d APIServerPlugin) AllNamespace() bool {
 	return d.Namespace == ""
 }
 
-func (d APIServerDownloader) ResourceTypeOrNameArgs() []string {
+func (d APIServerPlugin) ResourceTypeOrNameArgs() []string {
 	return append([]string{d.Table}, d.Names...)
 }
 
-func (d APIServerDownloader) restClientGetter() resource.RESTClientGetter {
+func (d APIServerPlugin) restClientGetter() resource.RESTClientGetter {
 	var wrapper = func(c *rest.Config) *rest.Config {
 		r := c
 		if d.RestConfig != nil {
@@ -56,7 +57,7 @@ func (d APIServerDownloader) restClientGetter() resource.RESTClientGetter {
 	return DefaultConfigFlags.WithWrapConfigFn(wrapper)
 }
 
-func (d APIServerDownloader) Download() ([]ext.Object, error) {
+func (d APIServerPlugin) Download() ([]ext.Object, error) {
 	if d.AllNamespace() && len(d.Names) > 1 {
 		return nil, errors.New("NAMESPACE required when name is provided")
 	}
@@ -81,4 +82,17 @@ func (d APIServerDownloader) Download() ([]ext.Object, error) {
 	return lop.Map(infos, func(item *resource.Info, index int) ext.Object {
 		return item.Object.(*unstructured.Unstructured).Object
 	}), nil
+}
+
+func (d APIServerPlugin) Delete(list []ext.Object) error {
+	// cli := d.restClientGetter().ToRESTConfig()
+	d.restClientGetter().ToRESTMapper()
+	for _, item := range list {
+		namespace, _ := jsonpath.Find(item, "{ .metadata.namespace }")
+		name, _ := jsonpath.Find(item, "{ .metadata.name }")
+
+		// resource.NewHelper(
+		// ).Delete(namespace, name)
+	}
+	return nil
 }

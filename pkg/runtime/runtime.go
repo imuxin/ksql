@@ -20,7 +20,7 @@ var _ Runnable[any] = &RunnableImpl[any]{}
 type RunnableImpl[T any] struct {
 	ksql        *parser.KSQL
 	restConfig  *rest.Config
-	downloader  ext.Downloader
+	plugin      ext.Plugin
 	whereFilter ext.Filter
 }
 

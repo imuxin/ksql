@@ -32,7 +32,7 @@ func (r *RunnableImpl[T]) initDownloader(table, namespace string, k8sFilters []*
 		}
 	}
 
-	r.downloader = extkube.APIServerDownloader{
+	r.plugin = extkube.APIServerPlugin{
 		RestConfig: r.restConfig,
 		Table:      table,
 		Namespace:  namespace,
@@ -46,14 +46,14 @@ func (r *RunnableImpl[T]) initWhereFilter(whereExpr *parser.WhereExpr) {
 	r.whereFilter = ext.CompileWhereFilter(whereExpr)
 }
 
-func (r *RunnableImpl[T]) List() ([]T, error) {
+func (r *RunnableImpl[T]) list(table, namespace string, k8sFilters []*parser.KubernetesFilter, whereExpr *parser.WhereExpr) ([]T, error) {
 	r.initWhereFilter(r.ksql.Select.Where)
 	err := r.initDownloader(r.ksql.Select.From.Table, r.ksql.Select.Namespace, r.ksql.Select.KubernetesFilters)
 	if err != nil {
 		return nil, err
 	}
 
-	list, err := r.downloader.Download()
+	list, err := r.plugin.Download()
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,27 @@ func (r *RunnableImpl[T]) List() ([]T, error) {
 	return result, nil
 }
 
-func (r *RunnableImpl[T]) Delete() {}
+func (r *RunnableImpl[T]) List() ([]T, error) {
+	return r.list(
+		r.ksql.Select.From.Table,
+		r.ksql.Select.Namespace,
+		r.ksql.Select.KubernetesFilters,
+		r.ksql.Select.Where,
+	)
+}
+
+func (r *RunnableImpl[T]) Delete() error {
+	list, err := r.list(
+		r.ksql.Delete.From.Table,
+		r.ksql.Delete.Namespace,
+		r.ksql.Delete.KubernetesFilters,
+		r.ksql.Delete.Where,
+	)
+	if err != nil {
+		return err
+	}
+	r.plugin.Delete(list)
+}
 
 func (r *RunnableImpl[T]) Desc() ([]T, error) {
 	sql := fmt.Sprintf("SELECT * FROM crd NAME %s", r.ksql.Desc.Table)

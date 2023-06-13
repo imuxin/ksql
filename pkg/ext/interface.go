@@ -2,8 +2,9 @@ package ext
 
 type Object = map[string]interface{}
 
-type Downloader interface {
+type Plugin interface {
 	Download() ([]Object, error)
+	Delete([]Object) error
 }
 
 type Describer interface {
