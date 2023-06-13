@@ -157,7 +157,7 @@ func list() ([]T, error) {
 - [x] Support `WHERE` expr
 - [x] Support `DESC` expr
 - [ ] Support `USE` stat
-- [ ] Support `DELETE` stat
+- [x] Support `DELETE` stat
 - [ ] Support `UPDATE` stat
 - [ ] Support custom TABLE extensions
 - [ ] ...
