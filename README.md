@@ -6,7 +6,7 @@
 ## Install
 
 ```bash
-go install github.com/imuxin/ksql
+CGO_ENABLED=0 go install github.com/imuxin/ksql
 ```
 
 ## Goal #1: bring SQL lanugage for kubernetes command line tool
