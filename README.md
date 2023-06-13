@@ -11,7 +11,17 @@ go install github.com/imuxin/ksql
 
 ## Goal #1: bring SQL lanugage for kubernetes command line tool
 
-Examples:
+### Rule #1: `JSONPath` Support in column name and where filter
+
+More jsonpath support details, please check [kubernetes kubectl jsonpath support](https://kubernetes.io/docs/reference/kubectl/jsonpath/).
+
+### Rule #2: `NAMESPACE` `LABEL` `NAME` keyword support in sql statement
+
+- ps1: `NS` is abbreviation for `NAMESPACE`
+- ps2: `NAME` and `LABEL` are allowed to have multiple inputs
+- ps3: `NS` or `NAMESPACE` is required once `NAME` is used.
+
+### Examples:
 
 - `SELECT`
 
@@ -57,77 +67,9 @@ ksql> DESC envoyfilters.networking.istio.io
 |                     // The subset associated with the service.                                  |          |
 |                     subset string                                                               |          |
 |                 }                                                                               |          |
-|                 // The specific config generation context to match on.                          |          |
-|                 context string                                                                  |          |
-|                 // Match on envoy listener attributes.                                          |          |
-|                 listener struct {                                                               |          |
-|                     // Match a specific filter chain in a listener.                             |          |
-|                     filterChain struct {                                                        |          |
-|                         // Applies only to sidecars.                                            |          |
-|                         applicationProtocols string                                             |          |
-|                         // The destination_port value used by a filter chain's match condition. |          |
-|                         destinationPort int                                                     |          |
-|                         // The name of a specific filter to apply the patch to.                 |          |
-|                         filter struct {                                                         |          |
-|                             // The filter name to match on.                                     |          |
-|                             name string                                                         |          |
-|                             subFilter struct {                                                  |          |
-|                                 // The filter name to match on.                                 |          |
-|                                 name string                                                     |          |
-|                             }                                                                   |          |
-|                         }                                                                       |          |
-|                         // The name assigned to the filter chain.                               |          |
-|                         name string                                                             |          |
-|                         // The SNI value used by a filter chain's match condition.              |          |
-|                         sni string                                                              |          |
-|                         // Applies only to `SIDECAR_INBOUND` context.                           |          |
-|                         transportProtocol string                                                |          |
-|                     }                                                                           |          |
-|                     // Match a specific listener by its name.                                   |          |
-|                     name string                                                                 |          |
-|                     portName string                                                             |          |
-|                     portNumber int                                                              |          |
-|                 }                                                                               |          |
-|                 // Match on properties associated with a proxy.                                 |          |
-|                 proxy struct {                                                                  |          |
-|                     metadata map[string]string                                                  |          |
-|                     proxyVersion string                                                         |          |
-|                 }                                                                               |          |
-|                 // Match on envoy HTTP route configuration attributes.                          |          |
-|                 routeConfiguration struct {                                                     |          |
-|                     gateway string                                                              |          |
-|                     // Route configuration name to match on.                                    |          |
-|                     name string                                                                 |          |
-|                     // Applicable only for GATEWAY context.                                     |          |
-|                     portName string                                                             |          |
-|                     portNumber int                                                              |          |
-|                     vhost struct {                                                              |          |
-|                         name string                                                             |          |
-|                         // Match a specific route within the virtual host.                      |          |
-|                         route struct {                                                          |          |
-|                             // Match a route with specific action type.                         |          |
-|                             action string                                                       |          |
-|                             name string                                                         |          |
-|                         }                                                                       |          |
-|                     }                                                                           |          |
-|                 }                                                                               |          |
-|             }                                                                                   |          |
-|             // The patch to apply along with the operation.                                     |          |
-|             patch struct {                                                                      |          |
-|                 // Determines the filter insertion order.                                       |          |
-|                 filterClass string                                                              |          |
-|                 // Determines how the patch should be applied.                                  |          |
-|                 operation string                                                                |          |
-|                 // The JSON config of the object being patched.                                 |          |
-|                 value map[string]interface{}                                                    |          |
-|             }                                                                                   |          |
-|         }                                                                                       |          |
-|         // Priority defines the order in which patch sets are applied within a context.         |          |
-|         priority int                                                                            |          |
-|         workloadSelector struct {                                                               |          |
-|             labels map[string]string                                                            |          |
-|         }                                                                                       |          |
-|     }                                                                                           |          |
+|                                                                                                 |          |
+|                 ...                                                                             |          |
+|                                                                                                 |          |
 |     status map[string]interface{}                                                               |          |
 | }                                                                                               |          |
 +-------------------------------------------------------------------------------------------------+----------+
