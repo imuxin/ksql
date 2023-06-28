@@ -3,8 +3,10 @@ package runtime
 import (
 	"k8s.io/client-go/rest"
 
+	"github.com/imuxin/ksql/pkg/common"
 	"github.com/imuxin/ksql/pkg/ext/abs"
 	"github.com/imuxin/ksql/pkg/parser"
+	"github.com/imuxin/ksql/pkg/pretty"
 )
 
 var (
@@ -12,7 +14,7 @@ var (
 )
 
 type Runnable[T any] interface {
-	Run() ([]T, error)
+	Run() ([]T, []pretty.PrintColumn, error)
 }
 
 var _ Runnable[any] = &RunnableImpl[any]{}
@@ -31,7 +33,7 @@ func NewDefaultRunnable[T any](ksql *parser.KSQL, restConfig *rest.Config) Runna
 	}
 }
 
-func (r RunnableImpl[T]) Run() ([]T, error) {
+func (r RunnableImpl[T]) Run() (results []T, columns []pretty.PrintColumn, err error) {
 	// TODO: 支持自定义 Table 拓展
 	switch {
 	case r.ksql.Desc != nil:
@@ -40,6 +42,7 @@ func (r RunnableImpl[T]) Run() ([]T, error) {
 		return r.List()
 	case r.ksql.Delete != nil:
 		return r.Delete()
+	default:
+		return nil, nil, common.Unsupported()
 	}
-	return nil, nil
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func Exec(in string, restConfig *rest.Config) (string, error) {
-	columns, result, err := executor.ExecuteLikeSQL[abs.Object](in, restConfig)
+	result, columns, err := executor.ExecuteLikeSQL[abs.Object](in, restConfig)
 	if err != nil {
 		return "", err
 	}

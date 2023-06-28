@@ -15,6 +15,7 @@ import (
 	"github.com/imuxin/ksql/pkg/ext/abs"
 	"github.com/imuxin/ksql/pkg/ext/kube"
 	"github.com/imuxin/ksql/pkg/parser"
+	"github.com/imuxin/ksql/pkg/pretty"
 )
 
 func convert[T any](list []abs.Object) ([]T, error) {
@@ -69,7 +70,7 @@ func (r *RunnableImpl[T]) list(table, namespace string, k8sFilters []*parser.Kub
 	}), nil
 }
 
-func (r *RunnableImpl[T]) List() ([]T, error) {
+func (r *RunnableImpl[T]) List() ([]T, []pretty.PrintColumn, error) {
 	list, err := r.list(
 		r.ksql.Select.From.Table,
 		r.ksql.Select.Namespace,
@@ -77,13 +78,14 @@ func (r *RunnableImpl[T]) List() ([]T, error) {
 		r.ksql.Select.Where,
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
-	return convert[T](list)
+	printColumns := r.plugin.Columns(r.ksql)
+	rr, err := convert[T](list)
+	return rr, printColumns, err
 }
 
-func (r *RunnableImpl[T]) Delete() ([]T, error) {
+func (r *RunnableImpl[T]) Delete() ([]T, []pretty.PrintColumn, error) {
 	list, err := r.list(
 		r.ksql.Delete.From.Table,
 		r.ksql.Delete.Namespace,
@@ -91,39 +93,52 @@ func (r *RunnableImpl[T]) Delete() ([]T, error) {
 		r.ksql.Delete.Where,
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	results, err := r.plugin.Delete(list)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return convert[T](results)
+	printColumns := r.plugin.Columns(r.ksql)
+	rr, err := convert[T](results)
+	return rr, printColumns, err
 }
 
-func (r *RunnableImpl[T]) Desc() ([]T, error) {
+func (r *RunnableImpl[T]) Desc() ([]T, []pretty.PrintColumn, error) {
+	printColumns := []pretty.PrintColumn{
+		{
+			Name:     "SCHEMA",
+			JSONPath: "{ .spec }",
+		},
+		{
+			Name:     "VERSION",
+			JSONPath: "{ .version }",
+		},
+	}
+
 	sql := fmt.Sprintf("SELECT * FROM crd NAME %s", r.ksql.Desc.Table)
 	ksql, err := parser.Parse(sql)
 	if err != nil {
-		return nil, err
+		return nil, printColumns, err
 	}
 	rr := RunnableImpl[apiextensionsv1.CustomResourceDefinition]{
 		ksql:       ksql,
 		restConfig: r.restConfig,
 	}
 
-	tables, err := rr.List()
+	tables, _, err := rr.List()
 	if err != nil {
-		return nil, err
+		return nil, printColumns, err
 	}
 	if len(tables) == 0 {
-		return nil, nil
+		return nil, printColumns, nil
 	}
 
 	list, err := kube.Describer{
 		Tables: tables,
 	}.Desc()
 	if err != nil {
-		return nil, err
+		return nil, printColumns, err
 	}
 
 	_r, err := rxgo.Just(list)().
@@ -135,7 +150,7 @@ func (r *RunnableImpl[T]) Desc() ([]T, error) {
 		}).
 		ToSlice(len(list))
 	if err != nil {
-		return nil, err
+		return nil, printColumns, err
 	}
 
 	result := make([]T, len(_r))
@@ -143,5 +158,5 @@ func (r *RunnableImpl[T]) Desc() ([]T, error) {
 		result[i] = *item.(*T)
 	}
 
-	return result, nil
+	return result, printColumns, nil
 }

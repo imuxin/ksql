@@ -14,6 +14,8 @@ import (
 
 	"github.com/imuxin/ksql/pkg/ext/abs"
 	"github.com/imuxin/ksql/pkg/ext/kube"
+	"github.com/imuxin/ksql/pkg/parser"
+	"github.com/imuxin/ksql/pkg/pretty"
 	utilkube "github.com/imuxin/ksql/pkg/util/kube"
 )
 
@@ -94,3 +96,28 @@ func (t IstioConfig) Download() ([]abs.Object, error) {
 }
 
 func (t IstioConfig) Delete(list []abs.Object) ([]abs.Object, error) { return nil, nil } //nolint
+
+func (t IstioConfig) Columns(ksql *parser.KSQL) []pretty.PrintColumn {
+	prettyColumns := ksql.CompilePrintColumns()
+	if prettyColumns == nil {
+		prettyColumns = []pretty.PrintColumn{
+			{
+				Name:     "kind",
+				JSONPath: "{ .kind }",
+			},
+			{
+				Name:     "apiVersion",
+				JSONPath: "{ .apiVersion }",
+			},
+			{
+				Name:     "namespace",
+				JSONPath: "{ .metadata.namespace }",
+			},
+			{
+				Name:     "name",
+				JSONPath: "{ .metadata.name }",
+			},
+		}
+	}
+	return prettyColumns
+}

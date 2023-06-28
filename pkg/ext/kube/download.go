@@ -15,6 +15,8 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/imuxin/ksql/pkg/ext/abs"
+	"github.com/imuxin/ksql/pkg/parser"
+	"github.com/imuxin/ksql/pkg/pretty"
 	"github.com/imuxin/ksql/pkg/util/jsonpath"
 )
 
@@ -170,4 +172,8 @@ func (d APIServerPlugin) Delete(list []abs.Object) ([]abs.Object, error) {
 		result = append(result, r.(*unstructured.Unstructured).Object)
 	}
 	return result, nil
+}
+
+func (d APIServerPlugin) Columns(ksql *parser.KSQL) []pretty.PrintColumn {
+	return ksql.CompilePrintColumns()
 }
