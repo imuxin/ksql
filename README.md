@@ -106,7 +106,9 @@ func list() ([]T, error) {
 
     s := labels.NewSelector()
     req, err := labels.NewRequirement(
-        "key", selection.Equals, []string{"val"})
+        "key",
+        selection.Equals,
+        []string{"val"})
     if err != nil {
         return nil, err
     }
@@ -114,7 +116,8 @@ func list() ([]T, error) {
 
     us, err := client.
         Resource(gvr).
-        List(context.TODO(), metav1.ListOptions{
+        List(context.TODO(),
+            metav1.ListOptions{
             LabelSelector: s.String(),
         })
     if err != nil {
@@ -124,8 +127,8 @@ func list() ([]T, error) {
     var results []T
     for _, item := range us.Items {
         obj := &T{}
-        if err := runtime.DefaultUnstructuredConverter.
-            FromUnstructured(item.Object, obj); err != nil {
+        if err := FromUnstructured(
+            item.Object, obj); err != nil {
             return nil, err
         }
         results = append(results, *obj)
@@ -141,7 +144,9 @@ import "github.com/imuxin/ksql/pkg/executor"
 
 func list() ([]T, error) {
     kubeConfig := getKubeConfig()
-    sql := `SELECT * FROM tttt.v1alpha1.k8s.io LABEL key = val`
+    sql := `SELECT * FROM
+            tttt.v1alpha1.k8s.io
+            LABEL key = val`
     return executor.Execute[T](sql, kubeConfig)
 }
 ```
