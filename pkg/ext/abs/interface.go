@@ -1,4 +1,4 @@
-package ext
+package abs
 
 type Object = map[string]interface{}
 

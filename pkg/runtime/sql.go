@@ -9,20 +9,20 @@ import (
 	"github.com/samber/lo"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/imuxin/ksql/pkg/ext"
-	extkube "github.com/imuxin/ksql/pkg/ext/kube"
+	"github.com/imuxin/ksql/pkg/ext/abs"
+	"github.com/imuxin/ksql/pkg/ext/kube"
 	"github.com/imuxin/ksql/pkg/parser"
 )
 
-func convert[T any](list []ext.Object) ([]T, error) {
+func convert[T any](list []abs.Object) ([]T, error) {
 	_r, err := rxgo.Just(list)().
 		Map(func(_ context.Context, i interface{}) (interface{}, error) {
 			var t T
 			o := reflect.New(reflect.TypeOf(t)).Interface() // o's type is *T
-			err := runtime.DefaultUnstructuredConverter.FromUnstructured(i.(ext.Object), o)
+			err := runtime.DefaultUnstructuredConverter.FromUnstructured(i.(abs.Object), o)
 			return o, err
 		}).
 		ToSlice(0)
@@ -38,39 +38,23 @@ func convert[T any](list []ext.Object) ([]T, error) {
 	return result, nil
 }
 
-func (r *RunnableImpl[T]) initDownloader(table, namespace string, k8sFilters []*parser.KubernetesFilter) error {
-	names := make([]string, 0)
-	selector := labels.NewSelector()
-	for _, item := range k8sFilters {
-		switch {
-		case item.Label != nil:
-			r, err := item.Label.IntoRequirement()
-			if err != nil {
-				return err
-			}
-			selector = selector.Add(*r)
-		case item.Name != nil:
-			names = append(names, *item.Name)
-		}
+func (r *RunnableImpl[T]) initPlugin(table, namespace string, k8sFilters KubernetesFilters) error {
+	names, selector, err := k8sFilters.Convert()
+	if err != nil {
+		return err
 	}
 
-	r.plugin = extkube.APIServerPlugin{
-		RestConfig: r.restConfig,
-		Table:      table,
-		Namespace:  namespace,
-		Names:      names,
-		Selector:   selector,
-	}
+	r.plugin = ext.NewPlugin(table, namespace, names, r.restConfig, selector)
 	return nil
 }
 
 func (r *RunnableImpl[T]) initWhereFilter(whereExpr *parser.WhereExpr) {
-	r.whereFilter = ext.CompileWhereFilter(whereExpr)
+	r.whereFilter = CompileWhereFilter(whereExpr)
 }
 
-func (r *RunnableImpl[T]) list(table, namespace string, k8sFilters []*parser.KubernetesFilter, whereExpr *parser.WhereExpr) ([]ext.Object, error) {
+func (r *RunnableImpl[T]) list(table, namespace string, k8sFilters []*parser.KubernetesFilter, whereExpr *parser.WhereExpr) ([]abs.Object, error) {
 	r.initWhereFilter(whereExpr)
-	err := r.initDownloader(table, namespace, k8sFilters)
+	err := r.initPlugin(table, namespace, k8sFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +64,7 @@ func (r *RunnableImpl[T]) list(table, namespace string, k8sFilters []*parser.Kub
 		return nil, err
 	}
 
-	return lo.Filter(list, func(item ext.Object, _ int) bool {
+	return lo.Filter(list, func(item abs.Object, _ int) bool {
 		return r.whereFilter.Filter(item)
 	}), nil
 }
@@ -135,7 +119,7 @@ func (r *RunnableImpl[T]) Desc() ([]T, error) {
 		return nil, nil
 	}
 
-	list, err := extkube.Describer{
+	list, err := kube.Describer{
 		Tables: tables,
 	}.Desc()
 	if err != nil {
@@ -146,7 +130,7 @@ func (r *RunnableImpl[T]) Desc() ([]T, error) {
 		Map(func(_ context.Context, i interface{}) (interface{}, error) {
 			var t T
 			o := reflect.New(reflect.TypeOf(t)).Interface() // o's type is *T
-			err := runtime.DefaultUnstructuredConverter.FromUnstructured(i.(ext.Object), o)
+			err := runtime.DefaultUnstructuredConverter.FromUnstructured(i.(abs.Object), o)
 			return o, err
 		}).
 		ToSlice(len(list))

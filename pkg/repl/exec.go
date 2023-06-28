@@ -4,12 +4,12 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/imuxin/ksql/pkg/executor"
-	"github.com/imuxin/ksql/pkg/ext"
+	"github.com/imuxin/ksql/pkg/ext/abs"
 	"github.com/imuxin/ksql/pkg/pretty"
 )
 
 func Exec(in string, restConfig *rest.Config) (string, error) {
-	columns, result, err := executor.ExecuteLikeSQL[ext.Object](in, restConfig)
+	columns, result, err := executor.ExecuteLikeSQL[abs.Object](in, restConfig)
 	if err != nil {
 		return "", err
 	}

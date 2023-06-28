@@ -3,6 +3,6 @@
         // "-ldflags=-extldflags=-Wl,--allow-multiple-definition"
     ],
     "go.toolsEnvVars": {
-        "CGO_ENABLED": 0
+        "CGO_ENABLED": "0"
     }
 }

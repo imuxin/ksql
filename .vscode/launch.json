@@ -10,7 +10,11 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/main.go",
-            "buildFlags": "-ldflags=-extldflags=-Wl,--allow-multiple-definition"
+            "args": [
+                "-e",
+                "select * from istio_config",
+            ],
+            // "buildFlags": "-ldflags=-extldflags=-Wl,--allow-multiple-definition"
         }
     ]
 }

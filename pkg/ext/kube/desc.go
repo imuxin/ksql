@@ -10,11 +10,11 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apiserver/schema"
 
-	"github.com/imuxin/ksql/pkg/ext"
+	"github.com/imuxin/ksql/pkg/ext/abs"
 	"github.com/imuxin/ksql/pkg/util"
 )
 
-var _ ext.Describer = &Describer{}
+var _ abs.Describer = &Describer{}
 
 type Describer struct {
 	Tables []apiextensionsv1.CustomResourceDefinition
@@ -42,8 +42,8 @@ will output like this:
 	}
 */
 
-func (r Describer) Desc() ([]ext.Object, error) {
-	var result []ext.Object
+func (r Describer) Desc() ([]abs.Object, error) {
+	var result []abs.Object
 	if len(r.Tables) == 0 {
 		return nil, nil
 	}

@@ -3,7 +3,7 @@ package runtime
 import (
 	"k8s.io/client-go/rest"
 
-	"github.com/imuxin/ksql/pkg/ext"
+	"github.com/imuxin/ksql/pkg/ext/abs"
 	"github.com/imuxin/ksql/pkg/parser"
 )
 
@@ -20,8 +20,8 @@ var _ Runnable[any] = &RunnableImpl[any]{}
 type RunnableImpl[T any] struct {
 	ksql        *parser.KSQL
 	restConfig  *rest.Config
-	plugin      ext.Plugin
-	whereFilter ext.Filter
+	plugin      abs.Plugin
+	whereFilter Filter
 }
 
 func NewDefaultRunnable[T any](ksql *parser.KSQL, restConfig *rest.Config) Runnable[T] {

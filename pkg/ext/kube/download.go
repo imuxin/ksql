@@ -14,7 +14,7 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
 
-	"github.com/imuxin/ksql/pkg/ext"
+	"github.com/imuxin/ksql/pkg/ext/abs"
 	"github.com/imuxin/ksql/pkg/util/jsonpath"
 )
 
@@ -24,34 +24,47 @@ var DefaultConfigFlags = genericclioptions.NewConfigFlags(true).
 	WithDiscoveryQPS(50.0)
 
 // static (compile time) check that APIServerPlugin satisfies the `Downloader` interface.
-var _ ext.Plugin = &APIServerPlugin{}
+var _ abs.Plugin = &APIServerPlugin{}
 
 type APIServerPlugin struct {
-	RestConfig *rest.Config
-	Database   string
-	Table      string
-	Namespace  string
-	Names      []string
-	Selector   labels.Selector
+	config    *rest.Config
+	table     string
+	namespace string
+	names     []string
+	selector  labels.Selector
 }
 
-func (d APIServerPlugin) restConfig() (*rest.Config, error) {
+func NewPlugin(
+	table, namespace string,
+	names []string,
+	restConfig *rest.Config,
+	selector labels.Selector) abs.Plugin {
+	return APIServerPlugin{
+		config:    restConfig,
+		table:     table,
+		namespace: namespace,
+		names:     names,
+		selector:  selector,
+	}
+}
+
+func (d APIServerPlugin) RestConfig() (*rest.Config, error) {
 	return d.restClientGetter().ToRESTConfig()
 }
 
 func (d APIServerPlugin) AllNamespace() bool {
-	return d.Namespace == ""
+	return d.namespace == ""
 }
 
 func (d APIServerPlugin) ResourceTypeOrNameArgs() []string {
-	return append([]string{d.Table}, d.Names...)
+	return append([]string{d.table}, d.names...)
 }
 
 func (d APIServerPlugin) restClientGetter() resource.RESTClientGetter {
 	var wrapper = func(c *rest.Config) *rest.Config {
 		r := c
-		if d.RestConfig != nil {
-			r = d.RestConfig
+		if d.config != nil {
+			r = d.config
 		}
 
 		if r.Timeout == 0 {
@@ -64,14 +77,14 @@ func (d APIServerPlugin) restClientGetter() resource.RESTClientGetter {
 	return DefaultConfigFlags.WithWrapConfigFn(wrapper)
 }
 
-func (d APIServerPlugin) Download() ([]ext.Object, error) {
-	if d.AllNamespace() && len(d.Names) > 1 {
+func (d APIServerPlugin) Download() ([]abs.Object, error) {
+	if d.AllNamespace() && len(d.names) > 1 {
 		return nil, errors.New("NAMESPACE required when name is provided")
 	}
 	r := resource.NewBuilder(d.restClientGetter()).
 		Unstructured().
-		NamespaceParam(d.Namespace).DefaultNamespace().AllNamespaces(d.AllNamespace()).
-		LabelSelectorParam(d.Selector.String()).
+		NamespaceParam(d.namespace).DefaultNamespace().AllNamespaces(d.AllNamespace()).
+		LabelSelectorParam(d.selector.String()).
 		// FieldSelectorParam(o.FieldSelector).
 		// Subresource(o.Subresource).
 		RequestChunksOf(0).
@@ -86,19 +99,19 @@ func (d APIServerPlugin) Download() ([]ext.Object, error) {
 	}
 	infos, _ := r.Infos()
 
-	return lop.Map(infos, func(item *resource.Info, index int) ext.Object {
+	return lop.Map(infos, func(item *resource.Info, index int) abs.Object {
 		return item.Object.(*unstructured.Unstructured).Object
 	}), nil
 }
 
-func (d APIServerPlugin) gvk(obj ext.Object) schema.GroupVersionKind {
+func (d APIServerPlugin) gvk(obj abs.Object) schema.GroupVersionKind {
 	apiVersion, _ := jsonpath.Find(obj, "{ .apiVersion }")
 	kind, _ := jsonpath.Find(obj, "{ .kind }")
 	return schema.FromAPIVersionAndKind(apiVersion, kind)
 }
 
-func (d APIServerPlugin) restClientFor(obj ext.Object) (*rest.RESTClient, error) {
-	cfg, err := d.restConfig()
+func (d APIServerPlugin) restClientFor(obj abs.Object) (*rest.RESTClient, error) {
+	cfg, err := d.RestConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +129,7 @@ func (d APIServerPlugin) restClientFor(obj ext.Object) (*rest.RESTClient, error)
 	return rest.RESTClientFor(cfg)
 }
 
-func (d APIServerPlugin) restMappingFor(obj ext.Object) (*meta.RESTMapping, error) {
+func (d APIServerPlugin) restMappingFor(obj abs.Object) (*meta.RESTMapping, error) {
 	mapper, err := d.restClientGetter().ToRESTMapper()
 	if err != nil {
 		return nil, err
@@ -126,7 +139,7 @@ func (d APIServerPlugin) restMappingFor(obj ext.Object) (*meta.RESTMapping, erro
 	return mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 }
 
-func (d APIServerPlugin) resourceHelper(obj ext.Object) (*resource.Helper, error) {
+func (d APIServerPlugin) resourceHelper(obj abs.Object) (*resource.Helper, error) {
 	restClient, err := d.restClientFor(obj)
 	if err != nil {
 		return nil, err
@@ -141,8 +154,8 @@ func (d APIServerPlugin) resourceHelper(obj ext.Object) (*resource.Helper, error
 	), nil
 }
 
-func (d APIServerPlugin) Delete(list []ext.Object) ([]ext.Object, error) {
-	var result []ext.Object
+func (d APIServerPlugin) Delete(list []abs.Object) ([]abs.Object, error) {
+	var result []abs.Object
 	for _, item := range list {
 		helper, err := d.resourceHelper(item)
 		if err != nil {
